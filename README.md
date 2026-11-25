@@ -32,3 +32,5 @@ Experimental ZSC31010 manual Gain_B / Offset_B write path added: explicit local 
 
 ## v0.5.0 · Additional experimental I²C drivers
 ZSC31050 / ZSC31150 read-only RAM and EEPROM, D8/D9 ADC acquisition with sample averaging and guided point capture. ZSC31014 updated DF status handling. Firmware v2 required. No automatic native calibration or hardware qualification.
+
+ZSC31010: experimental Raw Mode with pre-existing unity gains only; 2-point idealized native-code candidate calculator (no automatic application). Hardware-captured values carry raw-word provenance in JSON reports.

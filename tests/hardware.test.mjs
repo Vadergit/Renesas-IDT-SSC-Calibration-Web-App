@@ -15,3 +15,7 @@ test('model-specific memory sizes and primary address',()=>{assert.equal(i2cProf
 test('raw words expose both signed and unsigned representation',()=>{assert.deepEqual(decodeRawPair([0xff,0xfe,0x80,0]),{pressureWord:65534,temperatureWord:32768,pressureSigned:-2,temperatureSigned:-32768});});
 test('averaging and count validation',async()=>{const a=await averageRaw(async()=>decodeRawPair([0,10,0,20]),3);assert.equal(a.pressureSigned,10);assert.equal(a.samples.length,3);await assert.rejects(averageRaw(()=>{},0));});
 test('double read rejects changed memory',async()=>{let i=0;await assert.rejects(readDouble(async()=>i++?'0001':'0000','RAM',1));assert.equal((await readDouble(async()=> 'ABCD','RAM',1)).words[0].value,'ABCD');});
+
+import {decode31010Raw,twoPoint31010} from '../renesas-hardware.mjs';
+test('ZACwire raw frame',()=>{assert.deepEqual(decode31010Raw([0x12,0x34,0x56]),{raw:4660,tempCode:86,format:'ZACwire14/8',bytes:[18,52,86]});assert.throws(()=>decode31010Raw([0xff,0,0]));});
+test('linear ideal native gain candidate',()=>{const r=twoPoint31010(1000,9000,1250,11250);assert.equal(r.gainCode,2048);assert.equal(r.offsetCode,0);assert.equal(r.error,0);assert.throws(()=>twoPoint31010(9000,1000,0,1000));});
