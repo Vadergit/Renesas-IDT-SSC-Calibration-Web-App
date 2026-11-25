@@ -13,3 +13,7 @@ Alle acht Modelle sind **offline**, nicht hardwarefreigegeben. Die Koeffizienten
 ## Lokal starten und prüfen
 
 `python3 -m http.server 8000 --bind 127.0.0.1` und http://127.0.0.1:8000 öffnen. `node --test tests/calibration.test.mjs` testet die Offline-Mathematik. Die öffentlichen Herstellerquellen sind in catalog.mjs verlinkt. USB-Diagnose erfordert Web Serial (Chrome/Edge).
+
+### ZSC31010: gerätespezifischer Offline-Viewer
+
+Die 14-Byte-Lesereihenfolge, der A5-Abschluss, das Offset-Duplikat sowie Gain-, Offset-, Temperatur-, AFE- und Ausgangsfelder werden gemäss öffentlichem ZSC31010-Datenblatt vom 20.01.2016 (Tabellen 3.6, 3.8–3.12) dekodiert. Der Viewer prüft nicht die ursprünglichen Signal-Paritätsbits und schreibt nichts. Das Beispiel nutzt die Fabrikwerte ab KW48/2008 mit Platzhaltern für individuelle Trims. Keine Aussage über die Gültigkeit eines physischen EEPROMs allein anhand des Dumps.

@@ -10,3 +10,7 @@ test('singular and nonfinite',()=>{assert.throws(()=>fitModel([{raw:1,reference:
 test('independent verification',()=>{const f=fitModel([{raw:0,reference:0},{raw:100,reference:100}]);assert.equal(verification(f,50,25,49,100,.5).pass,false);assert.equal(verification(f,50,25,49,100,1).pass,true);});
 test('bridge and clipping',()=>{near(bridge(5,-.5,3.5,24).amplifiedSpanMv,480);near(outputValue(150,0,100,.5,4.5,true),4.5);assert.throws(()=>outputValue(1,1,1,0,5,true));});
 test('all profiles fail closed',()=>{assert.equal(profiles.length,8);assert.ok(profiles.every(p=>p.hardware===false));});
+
+import {decode31010} from '../zsc31010.mjs';
+test('ZSC31010 default field example',()=>{const r=decode31010('FF 00 20 00 00 00 00 00 14 60 F3 FF F7 A5');assert.equal(r.Gain_B_code,16383);assert.equal(r.Offset_B,255);assert.equal(r.Gain_T,1);assert.equal(r.preampGain,24);assert.equal(r.outputMode,'Ratiometrisch');assert.equal(r.updateMs,5);});
+test('ZSC31010 malformed dump rejected',()=>{assert.throws(()=>decode31010('FF 00 20 00 00 00 00 00 14 60 F3 FF E7 A5'));assert.throws(()=>decode31010('FF 00'));});
