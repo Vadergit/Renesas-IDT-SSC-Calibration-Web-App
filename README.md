@@ -23,3 +23,7 @@ Die 14-Byte-Lesereihenfolge, der A5-Abschluss, das Offset-Duplikat sowie Gain-, 
 Uses original Elmos v0.7.173 inline styles, guided.css, interface.css, theme.css and settings-refresh.css. Guided shell mirrors the eleven-stage flow and eight task cards. Shared offline controls are moved between guided and classic workspaces without duplicated IDs. Calibration planning supports quick, TK0, TK0+TKE and custom grids; temperature models are linear offline fits (not native SSC coefficients). No Elmos executable protocol code is included. Hardware operations remain disabled.
 
 Guided measurements have a per-point selector and explicit manual capture; the classic table shares the same data. Automated browser smoke test is configured in GitHub Actions.
+
+## v0.4.0 · Experimental hardware read path
+
+See [HARDWARE.md](HARDWARE.md). SSC-CB ZACwire ZSC31010/15 and ESP32-C3 I2C ZSC31014 read paths are implemented, pending physical tests. All permanent programming remains disabled. Other model drivers remain outstanding.
