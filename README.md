@@ -29,3 +29,6 @@ Guided measurements have a per-point selector and explicit manual capture; the c
 See [HARDWARE.md](HARDWARE.md). SSC-CB ZACwire ZSC31010/15 and ESP32-C3 I2C ZSC31014 read paths are implemented, pending physical tests. All permanent programming remains disabled. Other model drivers remain outstanding.
 
 Experimental ZSC31010 manual Gain_B / Offset_B write path added: explicit local backup, preview, typed confirmation, fresh double-read and complete post-write verification. No hardware validation; never use with production units. Automatic/native coefficient calculation remains unavailable.
+
+## v0.5.0 · Additional experimental I²C drivers
+ZSC31050 / ZSC31150 read-only RAM and EEPROM, D8/D9 ADC acquisition with sample averaging and guided point capture. ZSC31014 updated DF status handling. Firmware v2 required. No automatic native calibration or hardware qualification.

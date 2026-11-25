@@ -9,3 +9,9 @@ const base=[0xff,0,0x20,0,0,0,0,0,0x14,0x60,0xf3,0xff,0xf7,0xa5];
 test('gain offset commands and preservation',()=>{const p=gainOffsetPlan(base,2048,-16);assert.deepEqual(p.commands,[[0x80,8],[0x90,0],[0xa0,63],[0xb0,240]]);assert.equal(p.expected[0],240);assert.equal(p.expected[1],63);assert.equal(p.expected[10]&31,base[10]&31);assert.equal(p.expected[12],1);assert.deepEqual(p.expected.slice(2,10),base.slice(2,10));});
 test('write aborts before commands if backup differs',async()=>{let sent=0;const d={model:'zsc31010',mode:'cm',readVerified:async()=>{const a=base.slice();a[2]=1;return a},command:async()=>{sent++;return 'A5'}};await assert.rejects(writeGainOffset(d,base,2048,0));assert.equal(sent,0)});
 test('write checks all bytes',async()=>{const p=gainOffsetPlan(base,2048,-16);let reads=0;const d={model:'zsc31010',mode:'cm',readVerified:async()=>reads++?p.expected:base,command:async()=> 'A5'};assert.equal((await writeGainOffset(d,base,2048,-16)).changed,4);});
+
+import {i2cProfiles,decodeRawPair,averageRaw,readDouble} from '../renesas-hardware.mjs';
+test('model-specific memory sizes and primary address',()=>{assert.equal(i2cProfiles.zsc31050.words,32);assert.equal(i2cProfiles.zsc31150.ram,15);assert.equal(i2cProfiles.zsc31050.address,'78');});
+test('raw words expose both signed and unsigned representation',()=>{assert.deepEqual(decodeRawPair([0xff,0xfe,0x80,0]),{pressureWord:65534,temperatureWord:32768,pressureSigned:-2,temperatureSigned:-32768});});
+test('averaging and count validation',async()=>{const a=await averageRaw(async()=>decodeRawPair([0,10,0,20]),3);assert.equal(a.pressureSigned,10);assert.equal(a.samples.length,3);await assert.rejects(averageRaw(()=>{},0));});
+test('double read rejects changed memory',async()=>{let i=0;await assert.rejects(readDouble(async()=>i++?'0001':'0000','RAM',1));assert.equal((await readDouble(async()=> 'ABCD','RAM',1)).words[0].value,'ABCD');});

@@ -39,3 +39,9 @@ export async function writeGainOffset(driver,before,gain,offset){
  const after=await driver.readVerified();if(hex(after)!==hex(plan.expected))throw Error('EEPROM-Rücklesekontrolle stimmt nicht mit dem Soll-Dump überein. Keine automatische Wiederholung.');
  return {after,changed:plan.commands.length};
 }
+
+export const i2cProfiles=Object.freeze({zsc31014:{tag:'A',address:'28',words:20,ram:0,ack:'5A'},zsc31050:{tag:'B',address:'78',words:32,ram:32,ack:'CM50'},zsc31150:{tag:'C',address:'78',words:20,ram:15,ack:'C372'}});
+export function decodeWords(bytes,count){if(!Array.isArray(bytes)||bytes.length!==count*2||bytes.some(x=>!Number.isInteger(x)||x<0||x>255))throw Error('Falsche Wortanzahl.');return Array.from({length:count},(_,i)=>({address:i.toString(16).padStart(2,'0').toUpperCase(),value:hex(bytes.slice(i*2,i*2+2)).replaceAll(' ','')}))}
+export function decodeRawPair(bytes){const w=decodeWords(bytes,2).map(v=>parseInt(v.value,16));return {pressureWord:w[0],temperatureWord:w[1],pressureSigned:w[0]>=32768?w[0]-65536:w[0],temperatureSigned:w[1]>=32768?w[1]-65536:w[1]}}
+export async function averageRaw(read,count=4){if(!Number.isInteger(count)||count<1||count>16)throw Error('1–16 Samples erforderlich.');const samples=[];for(let i=0;i<count;i++)samples.push(await read());const mean=k=>samples.reduce((s,v)=>s+v[k],0)/samples.length;return {pressureWord:mean('pressureWord'),temperatureWord:mean('temperatureWord'),pressureSigned:mean('pressureSigned'),temperatureSigned:mean('temperatureSigned'),samples};}
+export async function readDouble(command,name,count){const a=parseHex(await command(name,4000),count*2),b=parseHex(await command(name,4000),count*2);if(hex(a)!==hex(b))throw Error(name+' Doppellesung unterschiedlich.');return {bytes:a,words:decodeWords(a,count)};}

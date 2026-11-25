@@ -14,3 +14,6 @@ ZSC31010 raw mode needs unity gain and may require direct EEPROM changes; no nat
 - https://www.renesas.com/en/document/mat/zsc31010zsc31015zssc3015-zacwire-ssc-modular-evaluation-kit-manual (section 7)
 - https://www.renesas.com/en/document/dst/zsc31014-datasheet (sections 3.2, 3.5, 3.6)
 - https://www.mouser.com/datasheet/2/464/IDT_SSC-Comm-Board-Datasheet-160330_DST_20160416-1102180.pdf (section 6)
+
+## v0.5.0 · I²C bridge v2
+New firmware is incompatible with v1 handshake. ZSC31050 (72, CF, 30–4F EEPROM, 10–2F RAM) and ZSC31150 (72 D1, C372 response, 30–43 EEPROM, 10–1E RAM, checksum and command echo) are supported experimentally. The default primary I2C address 0x78 is intentionally allowed only for these families. D8/D9 read auto-zero-corrected raw pressure and temperature words. Capture is sequential, not synchronized, and raw word representation depends on ADC configuration; unsigned/signed display is explicitly selectable. No native coefficient encoding. ZSC31014 DF status is validated and stale values retried once. OFF powers the sensor down on explicit request or normal disconnect. Sources: https://dtsheet.com/doc/1381384/functional-description (sections 4.3–4.5) and https://dtsheet.com/doc/1381355/functional-description (sections 4.1–4.5). Physical electrical and timing validation required; no claim of completed hardware qualification.
