@@ -28,3 +28,5 @@ ESP32 GPIO6 / Pro Micro D4, open-drain signal, external switched pull-up and vol
 
 ## v0.6.1 – Laboratory test candidate
 SparkFun CPU identifiers fixed. RAM writes restricted to volatile coefficient words 00–07 for ZSC31050/31150, original and DIY, each with direct readback; no EEPROM commit. Reference: functional descriptions command tables 4.6 / 4.1. ZSC31050 normal mode now uses 71. Continuous sequential raw logging, backup comparison and explicit cold-start EEPROM comparison added. These features require hardware testing. All other missing native calibration and NVM paths remain blocked.
+
+Firmware protocol 3.1 required (older v3 rejected). Both I²C model families now have named register maps and masked volatile CFGAFE gain changes; 31050 CFGAFE 19 bits 3:0, 31150 CFGAFE 0B bits 9:6. Only gain bits change; actual ADC conversion and range must be validated on the bench. No auto-AFE calibration.

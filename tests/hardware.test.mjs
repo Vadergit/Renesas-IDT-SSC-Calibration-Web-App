@@ -21,7 +21,7 @@ test('ZACwire raw frame',()=>{assert.deepEqual(decode31010Raw([0x12,0x34,0x56]),
 test('linear ideal native gain candidate',()=>{const r=twoPoint31010(1000,9000,1250,11250);assert.equal(r.gainCode,2048);assert.equal(r.offsetCode,0);assert.equal(r.error,0);assert.throws(()=>twoPoint31010(9000,1000,0,1000));});
 
 import {adapterSupported,verifyBridgeVersion,I2cCB} from '../renesas-hardware.mjs';
-test('adapter capabilities and identity',()=>{for(const a of ['renesas','esp32','promicro'])for(const m of ['zsc31014','zsc31050','zsc31150'])assert.ok(adapterSupported(a,m));assert.equal(adapterSupported('promicro','zssc3281'),false);assert.throws(()=>verifyBridgeVersion('RENESAS-SSC-3 ESP32_C3','promicro'));assert.equal(verifyBridgeVersion('RENESAS-SSC-3 PRO_MICRO','promicro'),'RENESAS-SSC-3 PRO_MICRO')});
+test('adapter capabilities and identity',()=>{for(const a of ['renesas','esp32','promicro'])for(const m of ['zsc31014','zsc31050','zsc31150'])assert.ok(adapterSupported(a,m));assert.equal(adapterSupported('promicro','zssc3281'),false);assert.throws(()=>verifyBridgeVersion('RENESAS-SSC-3.1 ESP32_C3','promicro'));assert.equal(verifyBridgeVersion('RENESAS-SSC-3.1 PRO_MICRO','promicro'),'RENESAS-SSC-3.1 PRO_MICRO')});
 test('original 31014 I2C terminal sequence',async()=>{const sent=[],d=new I2cCB(async c=>{sent.push(c);return c==='ir_28001'?'5A':c==='ir_28003'?'5A1234':''},'zsc31014','28');await d.enter();assert.deepEqual(await d.word(0),[0x12,0x34]);assert.deepEqual(sent,['t11001','t_020','is_10','ps_d41','t00000','iwt28003A00000','ir_28001','iw_28003000000','ir_28003'])});
 
 import {ZACwireDIY} from '../renesas-hardware.mjs';
@@ -31,3 +31,6 @@ import {ramWord,writeRamChecked,compareBackup,rawStats} from '../renesas-hardwar
 test('RAM coefficient write bounds',async()=>{assert.equal(ramWord('zsc31050',7,65535).command,'RAMW07FFFF');assert.throws(()=>ramWord('zsc31050',8,0));assert.throws(()=>ramWord('zsc31014',0,0));assert.equal(await writeRamChecked('zsc31150',async c=>{assert.equal(c,'RAMW021234');return '1234'},2,0x1234),0x1234);await assert.rejects(writeRamChecked('zsc31150',async()=> '0000',2,0x1234))});
 test('backup compare model and byte changes',()=>{assert.deepEqual(compareBackup('zsc31010',[0,2],{schema:1,model:'zsc31010',bytes:[0,1]}),[{index:1,backup:'01',current:'02'}]);assert.throws(()=>compareBackup('zsc31010',[0],{schema:1,model:'zsc31015',bytes:[0]}));});
 test('raw statistics',()=>{assert.deepEqual(rawStats([1,3]),{count:2,mean:2,min:1,max:3,std:1})});
+
+import {afeGainPlan,decodeAfe,labelWords} from '../renesas-hardware.mjs';
+test('AFE gain masked without touching unrelated bits',()=>{assert.equal(afeGainPlan('zsc31050',0x9800,7).value,0x9807);assert.equal(afeGainPlan('zsc31150',0x0013,7).value,0x01d3);assert.equal(decodeAfe('zsc31150',0x01d3).gain,35);assert.throws(()=>afeGainPlan('zsc31014',0,1));assert.equal(labelWords('zsc31150',[{address:'00',value:'1234'}])[0].name,'c0 Offset')});
