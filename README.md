@@ -37,3 +37,6 @@ ZSC31010: experimental Raw Mode with pre-existing unity gains only; 2-point idea
 
 ## v0.6.0
 Original SSC-CB, ESP32-C3 and Pro Micro separately selectable; common DIY I²C protocol v3 with exact board identity. Original board I²C candidate driver. DIY read-only ZACwire candidate added; physical qualification pending. See HARDWARE.md and ADAPTER-PROTOCOL.md.
+
+## v0.6.1 · Laboratory test candidate
+Fixed Pro Micro FQBN, added bounded volatile RAM coefficient writes with readback, hardware ADC logging, backup comparison and cold-start EEPROM comparison. See [TEST-RELEASE.md](TEST-RELEASE.md) for scope and test checklist. Not a production calibration release.

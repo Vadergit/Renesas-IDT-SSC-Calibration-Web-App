@@ -59,7 +59,8 @@ void loop(){if(!Serial.available())return;String s=Serial.readStringUntil('\r');
  if(!ok){powerOff();nack("CM_RESPONSE");return;}cm=true;ack(active==M14?"5A":active==M50?"CM50":"C372");return;}
  if(!powered||active==NONE){nack("NOT_CONNECTED");return;}
  if(s=="DUMP"||s=="RAM"){bool ram=s=="RAM";if(!cm||(ram&&active==M14)){nack("MODE");return;}uint8_t count=active==M50?32:ram?15:20;uint8_t out[64];for(uint8_t i=0;i<count;i++){uint8_t cmd=active==M14?i:(ram?0x10:0x30)+i;if(!wordRead(cmd,out+2*i)){nack("WORD_READ");return;}}ack(hex(out,count*2));return;}
- if(s=="NOM"){if(!cm){nack("CM_REQUIRED");return;}bool ok=active==M14?tx(address,0x80,2):tx(address,active==M50?0x01:0x01);cm=false;if(!ok){nack("NOM");return;}delay(150);ack();return;}
+ if(s.startsWith("RAMW")&&s.length()==10){if(!cm||active==M14){nack("RAM_MODE");return;}for(int i=4;i<10;i++)if(!isxdigit(s[i])){nack("HEX");return;}uint8_t idx=strtoul(s.substring(4,6).c_str(),nullptr,16);uint16_t value=strtoul(s.substring(6).c_str(),nullptr,16);if(idx>7){nack("RAM_ADDRESS_DENIED");return;}if(!tx(address,0x80+idx,2,value)){nack("RAM_WRITE");return;}delay(2);uint8_t b[2];if(!wordRead(0x10+idx,b)||((uint16_t(b[0])<<8)|b[1])!=value){nack("RAM_VERIFY");return;}ack(hex(b,2));return;}
+ if(s=="NOM"){if(!cm){nack("CM_REQUIRED");return;}bool ok=active==M14?tx(address,0x80,2):tx(address,active==M50?0x71:0x01);cm=false;if(!ok){nack("NOM");return;}delay(150);ack();return;}
  if(s=="DF"){if(cm||active!=M14){nack("MODE");return;}uint8_t b[4];if(!rx(address,b,4)){nack("DF");return;}if((b[0]>>6)==2){delay(150);if(!rx(address,b,4)){nack("DF");return;}}ack(hex(b,4));return;}
  if(s=="RAW"){if(!cm||active==M14){nack("MODE");return;}uint8_t out[4];if(!rawWord(0xD8,out)||!rawWord(0xD9,out+2)){nack("RAW");return;}ack(hex(out,4));return;}
  nack("UNKNOWN_COMMAND");

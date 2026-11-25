@@ -25,3 +25,6 @@ Original SSC-CB has experimental I²C read path for ZSC31014/50/31150 alongside 
 
 ### DIY ZACwire experimental
 ESP32 GPIO6 / Pro Micro D4, open-drain signal, external switched pull-up and voltage-compatible interface. ZSC31010/15 CM and dump, 31010 Raw Mode only after host and firmware unity gain checks. 19-bit transmit, per-byte pulse duration and even parity checks, packet gap alignment. Timing especially at AVR 8 MHz and fast sensor output needs oscilloscope validation; no production qualification. No EEPROM writes through DIY. Sources: ZSC31010 datasheet rev 2.91 §§3.2.1–3.2.5, https://dtsheet.com/doc/1381341/data-sheet .
+
+## v0.6.1 – Laboratory test candidate
+SparkFun CPU identifiers fixed. RAM writes restricted to volatile coefficient words 00–07 for ZSC31050/31150, original and DIY, each with direct readback; no EEPROM commit. Reference: functional descriptions command tables 4.6 / 4.1. ZSC31050 normal mode now uses 71. Continuous sequential raw logging, backup comparison and explicit cold-start EEPROM comparison added. These features require hardware testing. All other missing native calibration and NVM paths remain blocked.

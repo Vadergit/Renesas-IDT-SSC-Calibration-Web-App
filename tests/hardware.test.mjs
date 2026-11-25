@@ -26,3 +26,8 @@ test('original 31014 I2C terminal sequence',async()=>{const sent=[],d=new I2cCB(
 
 import {ZACwireDIY} from '../renesas-hardware.mjs';
 test('DIY ZACwire explicit candidate support',async()=>{for(const a of ['esp32','promicro'])assert.ok(adapterSupported(a,'zsc31010'));const sent=[],d=new ZACwireDIY(async c=>{sent.push(c);return c==='ZCM10'?'A5':'00'.repeat(13)+'A5'},'zsc31010');await d.enter();await d.readVerified();assert.deepEqual(sent,['ZCM10','ZDUMP','ZDUMP']);await assert.rejects(d.startRaw(Array(14).fill(0)));});
+
+import {ramWord,writeRamChecked,compareBackup,rawStats} from '../renesas-hardware.mjs';
+test('RAM coefficient write bounds',async()=>{assert.equal(ramWord('zsc31050',7,65535).command,'RAMW07FFFF');assert.throws(()=>ramWord('zsc31050',8,0));assert.throws(()=>ramWord('zsc31014',0,0));assert.equal(await writeRamChecked('zsc31150',async c=>{assert.equal(c,'RAMW021234');return '1234'},2,0x1234),0x1234);await assert.rejects(writeRamChecked('zsc31150',async()=> '0000',2,0x1234))});
+test('backup compare model and byte changes',()=>{assert.deepEqual(compareBackup('zsc31010',[0,2],{schema:1,model:'zsc31010',bytes:[0,1]}),[{index:1,backup:'01',current:'02'}]);assert.throws(()=>compareBackup('zsc31010',[0],{schema:1,model:'zsc31015',bytes:[0]}));});
+test('raw statistics',()=>{assert.deepEqual(rawStats([1,3]),{count:2,mean:2,min:1,max:3,std:1})});
