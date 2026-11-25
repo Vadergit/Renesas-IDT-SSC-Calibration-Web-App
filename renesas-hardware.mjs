@@ -53,7 +53,7 @@ export function twoPoint31010(rawA,rawB,targetA,targetB){if(![rawA,rawB,targetA,
 
 export const adapters=Object.freeze({renesas:{baud:19200},esp32:{baud:115200,board:'ESP32_C3'},promicro:{baud:115200,board:'PRO_MICRO'}});
 export const zacModels=['zsc31010','zsc31015'];
-export function adapterSupported(adapter,model){return !!adapters[adapter]&&(!!i2cProfiles[model]||adapter==='renesas'&&zacModels.includes(model));}
+export function adapterSupported(adapter,model){return !!adapters[adapter]&&(!!i2cProfiles[model]||zacModels.includes(model));}
 export function verifyBridgeVersion(value,adapter){if(value!=='RENESAS-SSC-3 '+adapters[adapter]?.board)throw Error('Falsche Adapter-Firmware oder Boardauswahl. Version 3 erforderlich.');return value;}
 export class I2cCB {
  constructor(command,model,address){this.command=command;this.model=model;this.address=address;this.p=i2cProfiles[model];this.mode='unknown';if(!this.p||!/^[0-9A-F]{2}$/.test(address))throw Error('I²C Profil/Adresse fehlt.')}
@@ -65,4 +65,12 @@ export class I2cCB {
  async raw(){if(this.mode!=='cm'||!this.p.ram)throw Error('ADC nicht verfügbar.');const bytes=[];for(const cmd of [0xd8,0xd9]){await this.write([cmd]);await new Promise(r=>setTimeout(r,250));const b=await this.read(this.model==='zsc31150'?4:2);if(this.model==='zsc31150'&&(b[3]!==cmd||((b[0]+b[1]+b[2])&255)!==255))throw Error('ADC Prüfsumme falsch.');bytes.push(...b.slice(0,2))}return decodeRawPair(bytes)}
  async normal(){if(this.mode!=='cm')throw Error('CM erforderlich.');this.mode='unknown';await this.write(this.model==='zsc31014'?[0x80,0,0]:[1]);this.mode='nom'}
  async df(){if(this.model!=='zsc31014'||this.mode!=='nom')throw Error('NOM erforderlich.');return decode31014DF(await this.read(4))}
+}
+
+export class ZACwireDIY extends ZACwireCB{
+ async enter(){this.mode='unknown';const reply=await this.command(this.model==='zsc31010'?'ZCM10':'ZCM15');if(reply!=='A5')throw Error('ZACwire CM nicht bestätigt.');this.mode='cm'}
+ async dump(){if(this.mode!=='cm')throw Error('CM erforderlich.');return dumpBytes(this.model,await this.command('ZDUMP',2000))}
+ async normal(){if(this.mode!=='cm')throw Error('CM erforderlich.');this.mode='unknown';await this.command('ZNOM');this.mode='nom-requested'}
+ async startRaw(bytes){if(this.model!=='zsc31010'||this.mode!=='cm')throw Error('ZSC31010 CM erforderlich.');const g=(bytes[10]>>5)|(bytes[11]<<3)|((bytes[12]&15)<<11),t=(bytes[1]>>6)|((bytes[2]&63)<<2);if(g!==0x800||t!==0x80)throw Error('Raw Mode benötigt Unity Gains.');this.mode='unknown';await this.command('ZRAWSTART');this.mode='raw'}
+ async raw(){if(this.mode!=='raw')throw Error('Raw Mode erforderlich.');return decode31010Raw(parseHex(await this.command('ZRAW',1500),3))}
 }

@@ -36,4 +36,4 @@ ZSC31050 / ZSC31150 read-only RAM and EEPROM, D8/D9 ADC acquisition with sample 
 ZSC31010: experimental Raw Mode with pre-existing unity gains only; 2-point idealized native-code candidate calculator (no automatic application). Hardware-captured values carry raw-word provenance in JSON reports.
 
 ## v0.6.0
-Original SSC-CB, ESP32-C3 and Pro Micro separately selectable; common DIY I²C protocol v3 with exact board identity. Original board I²C candidate driver. DIY ZACwire still pending. See HARDWARE.md and ADAPTER-PROTOCOL.md.
+Original SSC-CB, ESP32-C3 and Pro Micro separately selectable; common DIY I²C protocol v3 with exact board identity. Original board I²C candidate driver. DIY read-only ZACwire candidate added; physical qualification pending. See HARDWARE.md and ADAPTER-PROTOCOL.md.
