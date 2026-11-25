@@ -2,13 +2,28 @@
 // External active-high load switch on GPIO10. Use switched pull-ups / appropriate level shifting.
 #include <Arduino.h>
 #include <Wire.h>
+#if defined(__AVR_ATmega32U4__)
+constexpr int SDA_PIN=2,SCL_PIN=3,PWR_EN=7;
+const char *board="PRO_MICRO";
+#elif defined(CONFIG_IDF_TARGET_ESP32C3)
 constexpr int SDA_PIN=4,SCL_PIN=5,PWR_EN=10;
+const char *board="ESP32_C3";
+#else
+#error Select ESP32-C3 or ATmega32U4
+#endif
+bool beginWire(){
+#if defined(__AVR_ATmega32U4__)
+ Wire.begin();Wire.setClock(100000);Wire.setWireTimeout(20000,true);return true;
+#else
+ if(!Wire.begin(SDA_PIN,SCL_PIN,100000))return false;Wire.setTimeOut(20);return true;
+#endif
+}
 enum Model { NONE, M14, M50, M150 };
 Model active=NONE; bool cm=false,powered=false; uint8_t address=0;
 void ack(const String &s=""){Serial.print("<ACK>");if(s.length()){Serial.print(" ");Serial.print(s);}Serial.print("\r\n");}
 void nack(const char *s){Serial.print("<NACK> ");Serial.print(s);Serial.print("\r\n");}
 bool tx(uint8_t a,uint8_t c,int n=0,uint16_t data=0){Wire.beginTransmission(a);Wire.write(c);if(n==1)Wire.write(uint8_t(data));if(n==2){Wire.write(uint8_t(data>>8));Wire.write(uint8_t(data));}return Wire.endTransmission()==0;}
-bool rx(uint8_t a,uint8_t *b,size_t n){if(Wire.requestFrom(a,n)!=n){while(Wire.available())Wire.read();return false;}for(size_t i=0;i<n;i++)b[i]=Wire.read();return true;}
+bool rx(uint8_t a,uint8_t *b,size_t n){if(Wire.requestFrom(a,uint8_t(n))!=n){while(Wire.available())Wire.read();return false;}for(size_t i=0;i<n;i++)b[i]=Wire.read();return true;}
 String hex(const uint8_t *p,size_t n){const char *h="0123456789ABCDEF";String s;for(size_t i=0;i<n;i++){s+=h[p[i]>>4];s+=h[p[i]&15];}return s;}
 void powerOff(){if(powered)Wire.end();pinMode(SDA_PIN,INPUT);pinMode(SCL_PIN,INPUT);digitalWrite(PWR_EN,LOW);powered=false;cm=false;active=NONE;}
 bool parseAddr(const String &s,uint8_t &a){if(s.length()!=2||!isxdigit(s[0])||!isxdigit(s[1]))return false;unsigned x=strtoul(s.c_str(),nullptr,16);if(x<8||x>120)return false;a=x;return true;}
@@ -16,8 +31,8 @@ bool checked150(uint8_t *b,uint8_t c){return b[3]==c&&uint8_t(b[0]+b[1]+b[2])==2
 bool wordRead(uint8_t cmd,uint8_t *out){uint8_t b[4];if(!tx(address,cmd,active==M14?2:0))return false;delayMicroseconds(300);if(active==M14){if(!rx(address,b,3)||b[0]!=0x5a)return false;out[0]=b[1];out[1]=b[2];}else{if(!rx(address,b,active==M150?4:2))return false;if(active==M150&&!checked150(b,cmd))return false;out[0]=b[0];out[1]=b[1];}return true;}
 bool rawWord(uint8_t cmd,uint8_t *out){uint8_t b[4];if(!tx(address,cmd))return false;delay(250);if(!rx(address,b,active==M150?4:2))return false;if(active==M150&&!checked150(b,cmd))return false;out[0]=b[0];out[1]=b[1];return true;}
 void setup(){pinMode(PWR_EN,OUTPUT);digitalWrite(PWR_EN,LOW);Serial.begin(115200);Serial.setTimeout(200);}
-void loop(){if(!Serial.available())return;String s=Serial.readStringUntil('\r');s.trim();if(s=="HELLO"){ack("RENESAS-I2C-2");return;}if(s=="OFF"){powerOff();ack();return;}
- if(s.startsWith("CM")&&s.length()==5){uint8_t a;char m=s[2];if(!parseAddr(s.substring(3),a)||(m!='A'&&m!='B'&&m!='C')||(m=='A'&&a==0x78)){nack("MODEL_ADDRESS");return;}powerOff();delay(50);if(!Wire.begin(SDA_PIN,SCL_PIN,100000)){nack("WIRE_INIT");return;}Wire.setTimeOut(20);digitalWrite(PWR_EN,HIGH);powered=true;active=m=='A'?M14:m=='B'?M50:M150;address=a;
+void loop(){if(!Serial.available())return;String s=Serial.readStringUntil('\r');s.trim();if(s=="HELLO"){ack(String("RENESAS-SSC-3 ")+board);return;}if(s=="OFF"){powerOff();ack();return;}
+ if(s.startsWith("CM")&&s.length()==5){uint8_t a;char m=s[2];if(!parseAddr(s.substring(3),a)||(m!='A'&&m!='B'&&m!='C')||(m=='A'&&a==0x78)){nack("MODEL_ADDRESS");return;}powerOff();delay(50);if(!beginWire()){nack("WIRE_INIT");return;}digitalWrite(PWR_EN,HIGH);powered=true;active=m=='A'?M14:m=='B'?M50:M150;address=a;
  // First command after power-on must be START_CM on M14/M50.
  delayMicroseconds(active==M14?500:5000);
  uint8_t b[4];bool ok=false;

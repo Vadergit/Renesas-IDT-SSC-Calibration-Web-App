@@ -1,0 +1,2 @@
+# DIY protocol v3
+USB CDC 115200, ASCII, CR command, CRLF response with ACK/NACK. One outstanding command. HELLO identifies RENESAS-SSC-3 ESP32_C3 or PRO_MICRO. CMA28 / CMB78 / CMC78 enter command mode for ZSC31014 / ZSC31050 / ZSC31150. DUMP reads EEPROM, RAM reads volatile memory (50/150), RAW reads D8/D9 ADC words, NOM requests normal operation, DF reads 31014 output, OFF removes supply. No arbitrary writes. No automatic retries. Both sketches are identical portable sources. Original board uses separate native terminal commands. Hardware qualification pending.

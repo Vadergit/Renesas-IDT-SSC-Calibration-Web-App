@@ -1,13 +1,31 @@
-name: Compile ESP32-C3 firmware
+name: Compile ESP32-C3 and Pro Micro firmware
 on:
   push:
   pull_request:
 jobs:
-  compile:
+  esp32:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: arduino/setup-arduino-cli@v2
       - run: arduino-cli core update-index --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
       - run: arduino-cli core install esp32:esp32@3.3.0 --additional-urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
-      - run: arduino-cli compile --fqbn esp32:esp32:esp32c3:CDCOnBoot=cdc firmware/esp32c3_renesas_i2c
+      - run: arduino-cli compile --fqbn esp32:esp32:esp32c3:CDCOnBoot=cdc --output-dir build/esp32 firmware/esp32c3_renesas_i2c
+      - uses: actions/upload-artifact@v4
+        with:
+          name: esp32c3-firmware
+          path: build/esp32
+  pro-micro:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: arduino/setup-arduino-cli@v2
+      - run: cmp firmware/esp32c3_renesas_i2c/esp32c3_renesas_i2c.ino firmware/pro_micro_renesas/pro_micro_renesas.ino
+      - run: arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/sparkfun/Arduino_Boards/main/IDE_Board_Manager/package_sparkfun_index.json
+      - run: arduino-cli core install SparkFun:avr --additional-urls https://raw.githubusercontent.com/sparkfun/Arduino_Boards/main/IDE_Board_Manager/package_sparkfun_index.json
+      - run: arduino-cli compile --fqbn SparkFun:avr:promicro:cpu=16MHz --output-dir build/pro16 firmware/pro_micro_renesas
+      - run: arduino-cli compile --fqbn SparkFun:avr:promicro:cpu=8MHz --output-dir build/pro8 firmware/pro_micro_renesas
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pro-micro-firmware
+          path: build/

@@ -19,3 +19,7 @@ test('double read rejects changed memory',async()=>{let i=0;await assert.rejects
 import {decode31010Raw,twoPoint31010} from '../renesas-hardware.mjs';
 test('ZACwire raw frame',()=>{assert.deepEqual(decode31010Raw([0x12,0x34,0x56]),{raw:4660,tempCode:86,format:'ZACwire14/8',bytes:[18,52,86]});assert.throws(()=>decode31010Raw([0xff,0,0]));});
 test('linear ideal native gain candidate',()=>{const r=twoPoint31010(1000,9000,1250,11250);assert.equal(r.gainCode,2048);assert.equal(r.offsetCode,0);assert.equal(r.error,0);assert.throws(()=>twoPoint31010(9000,1000,0,1000));});
+
+import {adapterSupported,verifyBridgeVersion,I2cCB} from '../renesas-hardware.mjs';
+test('adapter capabilities and identity',()=>{for(const a of ['renesas','esp32','promicro'])for(const m of ['zsc31014','zsc31050','zsc31150'])assert.ok(adapterSupported(a,m));assert.equal(adapterSupported('promicro','zssc3281'),false);assert.throws(()=>verifyBridgeVersion('RENESAS-SSC-3 ESP32_C3','promicro'));assert.equal(verifyBridgeVersion('RENESAS-SSC-3 PRO_MICRO','promicro'),'RENESAS-SSC-3 PRO_MICRO')});
+test('original 31014 I2C terminal sequence',async()=>{const sent=[],d=new I2cCB(async c=>{sent.push(c);return c==='ir_28001'?'5A':c==='ir_28003'?'5A1234':''},'zsc31014','28');await d.enter();assert.deepEqual(await d.word(0),[0x12,0x34]);assert.deepEqual(sent,['t11001','t_020','is_10','ps_d41','t00000','iwt28003A00000','ir_28001','iw_28003000000','ir_28003'])});
