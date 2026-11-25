@@ -1,10 +1,10 @@
 export function fitModel(points,kind="linear"){
- const terms={linear:2,quadratic:3,temperature:4}[kind];
- if(!terms||!Array.isArray(points)||points.length<terms||points.some(p=>!Number.isFinite(p.raw)||!Number.isFinite(p.reference)||(kind==="temperature"&&!Number.isFinite(p.temp))))throw Error("Zu wenige oder ungültige Messpunkte.");
+ const terms={linear:2,quadratic:3,tk0:3,temperature:4}[kind];
+ if(!terms||!Array.isArray(points)||points.length<terms||points.some(p=>!Number.isFinite(p.raw)||!Number.isFinite(p.reference)||((kind==="temperature"||kind==="tk0")&&!Number.isFinite(p.temp))))throw Error("Zu wenige oder ungültige Messpunkte.");
  const mean=k=>points.reduce((s,p)=>s+p[k],0)/points.length;
- const center=mean("raw"),scale=Math.max(...points.map(p=>Math.abs(p.raw-center))),tc=kind==="temperature"?mean("temp"):0,ts=kind==="temperature"?Math.max(...points.map(p=>Math.abs(p.temp-tc))):1;
+ const center=mean("raw"),scale=Math.max(...points.map(p=>Math.abs(p.raw-center))),tc=(kind==="temperature"||kind==="tk0")?mean("temp"):0,ts=(kind==="temperature"||kind==="tk0")?Math.max(...points.map(p=>Math.abs(p.temp-tc))):1;
  if(!Number.isFinite(scale)||!scale||!ts||!Number.isFinite(ts))throw Error("Messpunkte decken den Rohwert- oder Temperaturbereich nicht ab.");
- const basis=(r,t)=>{const x=(r-center)/scale,z=(t-tc)/ts;return kind==="quadratic"?[1,x,x*x]:kind==="temperature"?[1,x,z,x*z]:[1,x]};
+ const basis=(r,t)=>{const x=(r-center)/scale,z=(t-tc)/ts;return kind==="quadratic"?[1,x,x*x]:kind==="temperature"?[1,x,z,x*z]:kind==="tk0"?[1,x,z]:[1,x]};
  const a=points.map(p=>basis(p.raw,p.temp)),y=points.map(p=>p.reference);
  // Modified Gram-Schmidt with reorthogonalization, small normalized design matrix.
  const q=[],R=Array.from({length:terms},()=>Array(terms).fill(0)),b=[];
@@ -16,7 +16,7 @@ export function fitModel(points,kind="linear"){
  return {kind,center,scale,tc,ts,coefficients,residuals,maxError:Math.max(...residuals.map(Math.abs)),gain:kind==="linear"?coefficients[1]/scale:null,offset:kind==="linear"?coefficients[0]-coefficients[1]*center/scale:null};
 }
 
-export function predict(f,raw,temp=25){if(!Number.isFinite(raw)||!Number.isFinite(temp))throw Error("Ungültiger Prüfwert.");const x=(raw-f.center)/f.scale,z=(temp-f.tc)/f.ts,c=f.coefficients;return c[0]+c[1]*x+(f.kind==="quadratic"?c[2]*x*x:f.kind==="temperature"?c[2]*z+c[3]*x*z:0);}
+export function predict(f,raw,temp=25){if(!Number.isFinite(raw)||!Number.isFinite(temp))throw Error("Ungültiger Prüfwert.");const x=(raw-f.center)/f.scale,z=(temp-f.tc)/f.ts,c=f.coefficients;return c[0]+c[1]*x+(f.kind==="quadratic"?c[2]*x*x:f.kind==="temperature"?c[2]*z+c[3]*x*z:f.kind==="tk0"?c[2]*z:0);}
 
 export function verification(f,raw,temp,reference,span,tolerance){if(![reference,span,tolerance].every(Number.isFinite)||span<=0||tolerance<0)throw Error("Ungültiger Prüfbereich.");const estimate=predict(f,raw,temp),error=estimate-reference,percent=100*error/span;return {estimate,error,percent,pass:Math.abs(percent)<=tolerance};}
 

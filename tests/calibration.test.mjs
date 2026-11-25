@@ -14,3 +14,5 @@ test('all profiles fail closed',()=>{assert.equal(profiles.length,8);assert.ok(p
 import {decode31010} from '../zsc31010.mjs';
 test('ZSC31010 default field example',()=>{const r=decode31010('FF 00 20 00 00 00 00 00 14 60 F3 FF F7 A5');assert.equal(r.Gain_B_code,16383);assert.equal(r.Offset_B,255);assert.equal(r.Gain_T,1);assert.equal(r.preampGain,24);assert.equal(r.outputMode,'Ratiometrisch');assert.equal(r.updateMs,5);});
 test('ZSC31010 malformed dump rejected',()=>{assert.throws(()=>decode31010('FF 00 20 00 00 00 00 00 14 60 F3 FF E7 A5'));assert.throws(()=>decode31010('FF 00'));});
+
+test('three-point TK0 model',()=>{const f=fitModel([{raw:0,temp:20,reference:0},{raw:100,temp:20,reference:100},{raw:10,temp:40,reference:0}],'tk0');near(predict(f,60,40),50);});
