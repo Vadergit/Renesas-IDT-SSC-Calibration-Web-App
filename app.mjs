@@ -1,112 +1,42 @@
-import {catalog} from './catalog.mjs';
-import {fit} from './calibration.mjs';
-
-const get = id => document.getElementById(id);
-const manufacturer = catalog[0];
-const model = get('model');
-const body = get('points');
-const query = new URLSearchParams(location.search);
-const number = new Intl.NumberFormat('de-CH', {maximumSignificantDigits: 10});
-let report;
-
-function invalidate() {
-  report = undefined;
-  get('status').textContent = 'Berechne zuerst Gain und Offset.';
-  get('result').hidden = true;
-  get('check').hidden = true;
-  get('export').disabled = true;
-}
-
-function appendPoint(raw = '', reference = '') {
-  const row = body.insertRow();
-  const index = body.rows.length;
-  const heading = document.createElement('th');
-  heading.scope = 'row';
-  heading.textContent = index;
-  row.append(heading);
-  for (const [label, value] of [['Rohwert', raw], ['Referenz', reference]]) {
-    const field = document.createElement('input');
-    field.type = 'number';
-    field.step = 'any';
-    field.required = true;
-    field.value = value;
-    field.setAttribute('aria-label', `${label} Punkt ${index}`);
-    row.insertCell().append(field);
-  }
-  get('remove').disabled = index <= 2;
-}
-
-function updateModel() {
-  get('modelStatus').textContent = `${model.selectedOptions[0].text} · Simulation verfügbar. Hardwaretreiber in Vorbereitung.`;
-  const url = new URL(location.href);
-  url.searchParams.set('model', model.value);
-  history.replaceState(null, '', url);
-  body.replaceChildren();
-  appendPoint();
-  appendPoint();
-  get('checkRaw').value = '';
-  invalidate();
-}
-
-function selectModels(group, requested) {
-  model.replaceChildren();
-  for (const item of group.models) model.add(new Option(item.name, item.id));
-  if (group.models.some(item => item.id === requested)) model.value = requested;
-  updateModel();
-}
-
-model.addEventListener('change', updateModel);
-get('add').addEventListener('click', () => { appendPoint(); invalidate(); });
-get('remove').addEventListener('click', () => {
-  if (body.rows.length > 2) body.deleteRow(-1);
-  get('remove').disabled = body.rows.length <= 2;
-  invalidate();
-});
-get('example').addEventListener('click', () => {
-  body.replaceChildren();
-  appendPoint(1200, 0);
-  appendPoint(5202, 50);
-  appendPoint(9200, 100);
-  invalidate();
-});
-body.addEventListener('input', invalidate);
-
-function updateCheck() {
-  const raw = get('checkRaw').valueAsNumber;
-  const estimate = report ? raw * report.fit.gain + report.fit.offset : NaN;
-  get('checkResult').textContent = Number.isFinite(estimate) ? number.format(estimate) : '—';
-}
-
-get('calibration').addEventListener('submit', event => {
-  event.preventDefault();
-  invalidate();
-  const points = Array.from(body.rows, row => {
-    const [raw, reference] = row.querySelectorAll('input');
-    return {raw: raw.valueAsNumber, reference: reference.valueAsNumber};
-  });
-  try {
-    const result = fit(points);
-    report = {mode: 'simulation', manufacturer: manufacturer.id, model: model.value, points, fit: result};
-    get('gain').textContent = number.format(result.gain);
-    get('offset').textContent = number.format(result.offset);
-    get('error').textContent = number.format(result.residuals.reduce((max, error) => Math.max(max, Math.abs(error)), 0));
-    get('status').textContent = 'Lineares Modell berechnet: Referenz = Gain × Rohwert + Offset.';
-    get('result').hidden = false;
-    get('check').hidden = false;
-    get('export').disabled = false;
-    updateCheck();
-  } catch (error) {
-    get('status').textContent = error.message;
-  }
-});
-
-get('checkRaw').addEventListener('input', updateCheck);
-get('export').addEventListener('click', () => {
-  const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], {type: 'application/json'}));
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'ssc-simulation.json';
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
-selectModels(manufacturer, query.get('model'));
+import {profiles} from './catalog.mjs';
+import {fitModel,predict,verification,bridge,outputValue} from './calibration.mjs';
+const $=id=>document.getElementById(id), all=s=>[...document.querySelectorAll(s)], n=id=>$(id).valueAsNumber, fmt=v=>Number.isFinite(v)?new Intl.NumberFormat('de-CH',{maximumSignificantDigits:8}).format(v):'—', on=(id,fn)=>$(id).addEventListener('click',fn);
+let model,fit,points=[],checks=[],logs=[],step=0,timer,port,reader,readTask,closing=false,demo=false,session=0,serialBuffer='';
+const safeGet=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},safeSet=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+function show(i){step=Math.max(0,Math.min(12,i));$('landing').hidden=true;$('workspace').hidden=false;const compact=$('view').value==='compact';document.body.classList.toggle('compact',compact);all('[data-panel]').forEach(p=>p.hidden=!compact&&+p.dataset.panel!==step);all('[data-step]').forEach(b=>{const a=+b.dataset.step===step;b.classList.toggle('active',a);b.setAttribute('aria-current',a?'step':'false')});all('[data-next]').forEach(b=>b.disabled=step===12);all('[data-back]').forEach(b=>b.disabled=step===0);if(step===11)archive();if(step===12)summary();if(fit)plotFit();plotLog();}
+all('[data-step]').forEach(b=>b.onclick=()=>show(+b.dataset.step));all('[data-open]').forEach(b=>b.onclick=()=>show(+b.dataset.open));all('[data-next]').forEach(b=>b.onclick=()=>show(step+1));all('[data-back]').forEach(b=>b.onclick=()=>show(step-1));
+on('home',()=>{$('landing').hidden=false;$('workspace').hidden=true});on('classic',()=>show(step));on('settings',()=>{$('settingsPanel').hidden=!$('settingsPanel').hidden});$('theme').value=document.documentElement.dataset.theme||'light';$('theme').onchange=()=>{document.documentElement.dataset.theme=$('theme').value;try{localStorage.setItem('renesas-theme',$('theme').value)}catch{}if(fit)plotFit();plotLog()};$('view').onchange=()=>{try{safeSet('renesas-view',$('view').value)}catch{}if(!$('workspace').hidden)show(step)};$('view').value=safeGet('renesas-view','classic');
+function clearResult(){fit=undefined;checks=[];logs=[];stopLog();renderChecks();summary();$('logStatus').textContent='0 Messwerte';plotLog();['gain','offset','error','checkValue','checkError','checkStatus','liveValue'].forEach(id=>$(id).textContent='—');$('fitStatus').textContent='Noch keine gültige Berechnung.';$('formula').textContent='—';$('pointMsg').textContent='';draw('fitPlot',[]);}
+function row(raw='',reference='',temp=25){const tr=$('points').insertRow();tr.insertCell().textContent=$('points').rows.length;for(const [label,val] of [['Referenz',reference],['Rohwert',raw],['Temperatur',temp]]){const el=document.createElement('input');el.type='number';el.step='any';el.value=val;el.setAttribute('aria-label',label);tr.insertCell().append(el)}const b=document.createElement('button');b.textContent='Entfernen';b.onclick=()=>{tr.remove();[...$('points').rows].forEach((r,i)=>r.cells[0].textContent=i+1);clearResult()};tr.insertCell().append(b)}
+function readPoints(){return [...$('points').rows].map(r=>{const [reference,raw,temp]=[...r.querySelectorAll('input')].map(x=>x.valueAsNumber);return {reference,raw,temp}})}
+function selectModel(){model=profiles.find(p=>p.id===$('model').value)||profiles[0];$('brand').textContent=model.name+' · Renesas / IDT · v0.2.0';$('iface').replaceChildren(...model.interfaces.map(i=>new Option(i)));$('bits').textContent=model.bits;$('outputs').textContent=model.output;$('driver').textContent='Nicht freigegeben';$('source').href=model.source;const url=new URL(location.href);url.searchParams.set('model',model.id);history.replaceState(null,'',url);$('points').replaceChildren();row();row();clearResult();$('liveRaw').textContent='—';$('liveTemp').textContent='—';demo=false;updateMode();}
+function updateMode(){$('mode').textContent=port?'USB-Diagnose':demo?'Demo':'Offline';$('notice').textContent=port?'USB-Diagnose · keine Chipbefehle, keine bestätigte SSC-Verbindung.':demo?'Demo-Modus · synthetische Messwerte, keine Hardware-Schreibvorgänge.':'Offline-Arbeitsplatz · keine bestätigte Hardwarekommunikation und keine Chip-Schreibvorgänge.';$('connect').disabled=!!port||$('adapter').value==='offline';$('disconnect').disabled=!port;$('model').disabled=!!port;$('adapter').disabled=!!port;$('iface').disabled=!!port;$('baud').disabled=!!port}
+$('model').replaceChildren(...profiles.map(p=>new Option(p.name,p.id)));const requested=new URLSearchParams(location.search).get('model');if(profiles.some(p=>p.id===requested))$('model').value=requested;$('model').onchange=selectModel;$('adapter').onchange=updateMode;selectModel();
+function example(){const lo=n('min'),hi=n('max');if(!Number.isFinite(lo)||!Number.isFinite(hi)||hi<=lo){$('pointMsg').textContent='Ungültiger Messbereich.';return}demo=true;updateMode();$('points').replaceChildren();const kind=$('kind').value;for(const temp of kind==='temperature'?[10,40]:[25])for(const p of kind==='linear'?[0,1]:[0,.5,1]){const raw=1000+8000*p+(kind==='temperature'?(temp-25)*(5+2*p):0);row(raw,lo+p*(hi-lo),temp)}clearResult();}
+on('demo',()=>{if(port)return;example();show(2)});on('example',example);on('add',()=>{row();clearResult()});$('points').addEventListener('input',clearResult);['kind','unit','min','max'].forEach(id=>$(id).onchange=()=>{clearResult();$('liveUnit').textContent=$('unit').value});
+function range(){const lo=n('min'),hi=n('max');if(!Number.isFinite(lo)||!Number.isFinite(hi)||hi<=lo)throw Error('Messbereich Ende muss grösser als Anfang sein.');return [lo,hi]}
+on('calculate',()=>{clearResult();try{range();points=readPoints();fit=fitModel(points,$('kind').value);$('gain').textContent=fmt(fit.gain);$('offset').textContent=fmt(fit.offset);$('error').textContent=fmt(fit.maxError);$('fitStatus').textContent='Offline-Modell berechnet · '+points.length+' Messpunkte';$('formula').textContent='x = (ADC_S − '+fmt(fit.center)+') / '+fmt(fit.scale)+'\n'+(fit.kind==='temperature'?'z = (T − '+fmt(fit.tc)+') / '+fmt(fit.ts)+'\n':'')+'y = '+fit.coefficients.map((c,i)=>fmt(c)+['',' × x',fit.kind==='temperature'?' × z':' × x²',' × x × z'][i]).join(' + ');show(3)}catch(e){$('pointMsg').textContent=e.message}});
+function draw(id,series,points=[]){const canvas=$(id),w=canvas.clientWidth;if(!w)return;const h=230,d=window.devicePixelRatio||1;canvas.width=w*d;canvas.height=h*d;const ctx=canvas.getContext('2d');ctx.scale(d,d);const style=getComputedStyle(document.documentElement),ink=style.getPropertyValue('--muted'),line=style.getPropertyValue('--line'),blue=style.getPropertyValue('--blue');const data=[...series,...points].filter(p=>p.every(Number.isFinite));ctx.clearRect(0,0,w,h);if(!data.length)return;const xs=data.map(p=>p[0]),ys=data.map(p=>p[1]),xmin=Math.min(...xs),xmax=Math.max(...xs),ymin=Math.min(...ys),ymax=Math.max(...ys),X=x=>48+(x-xmin)/(xmax-xmin||1)*(w-65),Y=y=>h-28-(y-ymin)/(ymax-ymin||1)*(h-42);ctx.font='11px system-ui';ctx.fillStyle=ink;ctx.strokeStyle=line;for(let i=0;i<=4;i++){const yy=14+i*(h-42)/4;ctx.beginPath();ctx.moveTo(48,yy);ctx.lineTo(w-17,yy);ctx.stroke();ctx.fillText(fmt(ymax-(ymax-ymin)*i/4),3,yy+4)}ctx.fillText(fmt(xmin),48,h-8);ctx.textAlign='right';ctx.fillText(fmt(xmax),w-17,h-8);ctx.textAlign='left';ctx.strokeStyle=blue;ctx.lineWidth=2;ctx.beginPath();series.forEach((p,i)=>i?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1])));ctx.stroke();ctx.fillStyle=blue;points.forEach(p=>{ctx.beginPath();ctx.arc(X(p[0]),Y(p[1]),4,0,Math.PI*2);ctx.fill()})}
+function plotFit(){if(!fit)return;const a=Math.min(...points.map(p=>p.raw)),b=Math.max(...points.map(p=>p.raw));draw('fitPlot',Array.from({length:81},(_,i)=>{const r=a+(b-a)*i/80;return [r,predict(fit,r,fit.kind==='temperature'?fit.tc:25)]}),points.filter(p=>fit.kind!=='temperature'||p.temp===fit.tc).map(p=>[p.raw,p.reference]));}
+function renderChecks(){$('checks').replaceChildren();for(const c of checks){const tr=$('checks').insertRow();[c.raw,c.reference,c.estimate,c.percent].forEach(v=>tr.insertCell().textContent=fmt(v));tr.insertCell().textContent=c.pass?'Innerhalb':'Ausserhalb'}}
+function summary(){$('verificationSummary').textContent=checks.length?checks.filter(c=>c.pass).length+' / '+checks.length+' Prüfpunkte innerhalb Toleranz. Offline-Modell.':'Noch keine Prüfpunkte.'}
+on('verify',()=>{try{if(!fit)throw Error('Zuerst Koeffizienten berechnen.');const [lo,hi]=range(),raw=n('checkRaw'),temp=n('checkTemp'),reference=n('checkRef'),tolerance=n('tol'),c=verification(fit,raw,temp,reference,hi-lo,tolerance);checks.push({raw,temp,reference,tolerance,...c});$('checkValue').textContent=fmt(c.estimate);$('checkError').textContent=fmt(c.percent);$('checkStatus').textContent=c.pass?'Innerhalb':'Ausserhalb';$('checkStatus').className=c.pass?'status-pass':'status-fail';renderChecks();summary();live(raw,temp,c.estimate)}catch(e){$('checkStatus').textContent=e.message}});
+function bridgeCalc(ids,target){try{const r=bridge(...ids.map(n));$(target).textContent='Offset: '+fmt(r.offset)+' mV/V · Spanne: '+fmt(r.span)+' mV/V · Eingang: '+fmt(r.lowMv)+' … '+fmt(r.highMv)+' mV · verstärkte Spanne: '+fmt(r.amplifiedSpanMv)+' mV (idealisiert).'}catch(e){$(target).textContent=e.message}}
+on('afeCalc',()=>bridgeCalc(['supply','bridgeLow','bridgeHigh','afeGain'],'afeResult'));on('bridgeCalc',()=>bridgeCalc(['bV','bL','bH','bG'],'bridgeResult'));on('outCalc',()=>{try{$('outResult').textContent=fmt(outputValue(n('outInput'),...range(),n('outLow'),n('outHigh'),$('clip').checked))+' '+$('outType').value}catch(e){$('outResult').textContent=e.message}});
+function live(raw,temp,value){$('liveRaw').textContent=fmt(raw);$('liveTemp').textContent=fmt(temp);$('liveValue').textContent=fmt(value);$('liveUnit').textContent=$('unit').value}
+function log(raw,temp,origin){if(!Number.isFinite(raw)||!Number.isFinite(temp))return;const value=fit?predict(fit,raw,temp):null,lo=n('alarmLow'),hi=n('alarmHigh');logs.push({time:new Date().toISOString(),origin,raw,temp,value,alarm:value===null||!Number.isFinite(lo)||!Number.isFinite(hi)||lo>hi?'—':value<lo?'LOW':value>hi?'HIGH':'OK'});if(logs.length>10000)logs.shift();live(raw,temp,value);$('logStatus').textContent=logs.length+' Messwerte · '+origin;plotLog()}
+function plotLog(){draw('logPlot',logs.map((r,i)=>[i,r.raw]))}
+function stopLog(){clearInterval(timer);timer=undefined;$('logDemo').disabled=false}
+on('logAdd',()=>log(n('logRaw'),n('logTemp'),'manuell'));on('logDemo',()=>{if(port)return;stopLog();demo=true;updateMode();$('logDemo').disabled=true;const start=performance.now();timer=setInterval(()=>log(5000+3000*Math.sin((performance.now()-start)/1500),25,'demo'),Number($('interval').value))});on('logStop',stopLog);
+function report(){if(!fit)throw Error('Zuerst Koeffizienten berechnen.');return {schema:1,model:model.id,mode:'offline',synthetic:demo,created:new Date().toISOString(),unit:$('unit').value,range:range(),points,fit,checks,output:{type:$('outType').value,min:n('outLow'),max:n('outHigh'),clip:$('clip').checked},hardwareWritten:false}}
+function download(name,data,type){const url=URL.createObjectURL(new Blob([data],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function csv(rows,keys){const esc=v=>'"'+String(v??'').replaceAll('"','""')+'"';return [keys.join(';'),...rows.map(r=>keys.map(k=>esc(r[k])).join(';'))].join('\n')}
+function act(fn){try{fn()}catch(e){$('saveMsg').textContent=e.message}}
+on('export',()=>act(()=>download(model.id+'-offline.json',JSON.stringify(report(),null,2),'application/json')));on('csv',()=>act(()=>download(model.id+'-calibration.csv',csv(report().points,['raw','reference','temp']),'text/csv')));on('logExport',()=>download(model.id+'-log.csv',csv(logs,['time','origin','raw','temp','value','alarm']),'text/csv'));on('verificationExport',()=>download(model.id+'-verification.csv',csv(checks,['raw','temp','reference','estimate','error','percent','tolerance','pass']),'text/csv'));on('toVerify',()=>show(4));
+on('save',()=>act(()=>{const list=safeGet('renesas-archive',[]);list.unshift(report());safeSet('renesas-archive',list.slice(0,100));$('saveMsg').textContent='Offline-Bericht lokal gespeichert.'}));
+function archive(){const list=safeGet('renesas-archive',[]),root=$('archiveList');root.replaceChildren();if(!list.length){root.textContent='Keine gespeicherten Berichte.';return}list.forEach(r=>{const card=document.createElement('div');card.className='callout';const title=document.createElement('strong');title.textContent=r.model.toUpperCase()+' · '+r.created+' · '+(r.synthetic?'Demo':'Offline');card.append(title,document.createTextNode(' '));const b=document.createElement('button');b.textContent='JSON herunterladen';b.onclick=()=>download(r.model+'-offline.json',JSON.stringify(r,null,2),'application/json');card.append(b);root.append(card)})}
+on('refreshArchive',archive);on('print',()=>act(()=>{const r=report(),w=window.open('','_blank');if(!w)throw Error('Popup-Freigabe erforderlich.');w.opener=null;const doc=w.document;doc.title='Kalibrierbericht · '+r.model;const h=doc.createElement('h1');h.textContent='Offline-Kalibrierbericht · '+r.model.toUpperCase();const pre=doc.createElement('pre');pre.style.whiteSpace='pre-wrap';pre.textContent=JSON.stringify(r,null,2);doc.body.append(h,pre);w.print()}));
+on('hexView',()=>{const words=$('hex').value.trim().split(/[\s,;]+/);$('hexResult').textContent=words.length&&words.every(x=>/^(?:0x)?[0-9a-f]{1,4}$/i.test(x))?words.map((x,i)=>i.toString(16).padStart(4,'0')+'  0x'+parseInt(x.replace(/^0x/i,''),16).toString(16).toUpperCase().padStart(4,'0')).join('\n'):'Ungültige Hex-Wörter.'});
+on('connect',async()=>{if(port||closing)return;if(!navigator.serial){$('conn').textContent='Web Serial nicht verfügbar. Chrome oder Edge verwenden.';return}let p;try{$('connect').disabled=true;p=await navigator.serial.requestPort();await p.open({baudRate:Number($('baud').value)});port=p;stopLog();demo=false;session++;const current=session;serialBuffer='';$('conn').textContent='USB-Port geöffnet. Nur passiver Empfang; keine Befehle gesendet.';updateMode();readTask=(async()=>{try{reader=port.readable.getReader();const dec=new TextDecoder();while(current===session){const {value,done}=await reader.read();if(done)break;serialBuffer=(serialBuffer+dec.decode(value,{stream:true})).slice(-16000);$('serialLog').textContent=serialBuffer}}catch(e){if(!closing)$('conn').textContent='USB-Empfang beendet: '+e.message}finally{reader?.releaseLock();reader=undefined}})()}catch(e){if(p&&p!==port)try{await p.close()}catch{}$('conn').textContent='USB-Verbindung: '+e.message;updateMode()}});
+async function disconnect(){if(!port||closing)return;closing=true;session++;try{await reader?.cancel();await readTask;await port.close();$('conn').textContent='USB getrennt.'}catch(e){$('conn').textContent='USB-Trennung: '+e.message}finally{port=undefined;closing=false;updateMode()}}
+on('disconnect',disconnect);navigator.serial?.addEventListener('disconnect',e=>{if(e.target===port)disconnect()});window.addEventListener('resize',()=>{plotFit();plotLog()});updateMode();
