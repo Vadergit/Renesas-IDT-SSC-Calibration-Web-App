@@ -1,0 +1,31 @@
+import {chromium} from 'playwright';
+import assert from 'node:assert/strict';
+const browser=await chromium.launch({headless:true});
+try{
+const page=await browser.newPage({viewport:{width:1440,height:900}});
+const errors=[];page.on('pageerror',e=>errors.push(e.message));
+await page.goto('http://127.0.0.1:8000/?model=zsc31010',{waitUntil:'networkidle'});
+await page.locator('#landing').waitFor({state:'visible'});
+assert.equal(await page.locator('[data-task]').count(),8);
+await page.locator('[data-task=calibration]').click();
+await page.locator('[data-preset=tk0]').click();
+await page.locator('#gwNext').click();
+await page.locator('#gwNext').click();
+await page.locator('#gwNext').click();
+await page.locator('#gwCapture').waitFor({state:'visible'});
+assert.equal(await page.locator('#gwPointNav button').count(),3);
+await page.locator('#example').click();
+await page.locator('#calculate').click();
+await page.locator('#fitStatus').waitFor({state:'visible'});
+assert.match(await page.locator('#fitStatus').textContent(),/Offline-Modell berechnet/);
+await page.locator('#gwNext').click();
+await page.locator('#verify').waitFor({state:'visible'});
+await page.locator('#home').click();
+await page.locator('[data-task=inspect]').click();
+await page.locator('#hexExample').click();
+await page.locator('#hexView').click();
+assert.match(await page.locator('#hexResult').textContent(),/Gain_B_code/);
+await page.locator('#classic').click();
+await page.locator('#workspace').waitFor({state:'visible'});
+assert.deepEqual(errors,[]);
+}finally{await browser.close()}

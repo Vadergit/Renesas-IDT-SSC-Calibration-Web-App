@@ -21,3 +21,5 @@ Die 14-Byte-Lesereihenfolge, der A5-Abschluss, das Offset-Duplikat sowie Gain-, 
 ## Master UI v0.3.0
 
 Uses original Elmos v0.7.173 inline styles, guided.css, interface.css, theme.css and settings-refresh.css. Guided shell mirrors the eleven-stage flow and eight task cards. Shared offline controls are moved between guided and classic workspaces without duplicated IDs. Calibration planning supports quick, TK0, TK0+TKE and custom grids; temperature models are linear offline fits (not native SSC coefficients). No Elmos executable protocol code is included. Hardware operations remain disabled.
+
+Guided measurements have a per-point selector and explicit manual capture; the classic table shares the same data. Automated browser smoke test is configured in GitHub Actions.
