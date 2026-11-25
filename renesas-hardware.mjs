@@ -22,3 +22,20 @@ export class ZACwireCB{
 }
 export function decode31014DF(b){if(!Array.isArray(b)||b.length!==4||b.some(x=>!Number.isInteger(x)||x<0||x>255))throw Error('Vier I2C-Bytes nötig.');return {status:b[0]>>6,bridge:((b[0]&63)<<8)|b[1],temperatureCode:(b[2]<<3)|(b[3]>>5)};}
 export function decode31014EEPROM(b){if(!Array.isArray(b)||b.length!==40||b.some(x=>!Number.isInteger(x)||x<0||x>255))throw Error('20 EEPROM-Wörter nötig.');return Array.from({length:20},(_,i)=>(b[i*2]<<8)|b[i*2+1]);}
+
+export function gainOffsetPlan(before,gain,offset){
+ if(!Array.isArray(before)||before.length!==14||before[13]!==0xa5||(before[12]>>4)!==(before[0]&15)||before.some(b=>!Number.isInteger(b)||b<0||b>255))throw Error('Gültiger ZSC31010 EEPROM-Dump nötig.');
+ if(!Number.isInteger(gain)||gain<0||gain>32767||!Number.isInteger(offset)||offset< -8192||offset>8191)throw Error('Gain/Offset-Code ausserhalb des Wertebereichs.');
+ const oldGain=(before[10]>>5)|(before[11]<<3)|((before[12]&15)<<11),oldOffset=before[0]|((before[1]&63)<<8),o=offset&16383;
+ const commands=[];for(const [cmd,oldVal,newVal] of [[0x80,oldGain>>8,gain>>8],[0x90,oldGain&255,gain&255],[0xa0,oldOffset>>8,o>>8],[0xb0,oldOffset&255,o&255]])if(oldVal!==newVal)commands.push([cmd,newVal]);
+ const expected=before.slice();expected[0]=o&255;expected[1]=(expected[1]&192)|(o>>8);expected[10]=(expected[10]&31)|((gain&7)<<5);expected[11]=(gain>>3)&255;expected[12]=((o&15)<<4)|(gain>>11);
+ return {commands,expected};
+}
+export async function writeGainOffset(driver,before,gain,offset){
+ if(driver.model!=='zsc31010'||driver.mode!=='cm')throw Error('ZSC31010 im Command Mode erforderlich.');
+ const plan=gainOffsetPlan(before,gain,offset),current=await driver.readVerified();
+ if(hex(current)!==hex(before))throw Error('EEPROM seit Backup verändert; Vorgang abgebrochen.');
+ for(const bytes of plan.commands){const ack=await driver.command('rw_00002'+hex(bytes).replaceAll(' ',''));if(ack.toUpperCase()!=='A5')throw Error('Schreibbefehl nicht bestätigt. EEPROM kann teilweise geändert sein; erneut auslesen, nicht automatisch wiederholen.');}
+ const after=await driver.readVerified();if(hex(after)!==hex(plan.expected))throw Error('EEPROM-Rücklesekontrolle stimmt nicht mit dem Soll-Dump überein. Keine automatische Wiederholung.');
+ return {after,changed:plan.commands.length};
+}
