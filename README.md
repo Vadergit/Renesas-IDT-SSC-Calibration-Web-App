@@ -66,3 +66,6 @@ Six native stages with master sidebar and controls, verified backup gate, AFE li
 
 ## v0.7.6 · Guided backup navigation
 Removed redundant global wizard action row. The sensor preparation step exports the immutable original snapshot directly, not a later EEPROM read whose signature can differ. Current EEPROM viewer export stays separate. Next is still gated by original backup and unlocked EEPROM. Regression uses a changed simulated signature and verifies the original backup download and advancement.
+
+## v0.7.7 · Streamlined programming
+Removed redundant checkboxes and typed confirmation from guided ZSC31014 and expert ZSC31010 EEPROM programming; the explicit program button acts as the authorization. Original backup gate, validated change plan, connected state, lock/protected-register checks, serialized writes and readback remain. Volatile RAM operations no longer require a separate download or checkbox, but require a connected SSC and initial verified read. No automatic permanent writes.
