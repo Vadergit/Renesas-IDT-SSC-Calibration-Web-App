@@ -57,3 +57,6 @@ Original backup can also be imported from JSON after reconnection, checked again
 
 ## v0.7.2 · Elmos master UI alignment
 UI baseline: Elmos v0.7.176 (1239b7641115e037ddd9df59ff8b682ba036b35e). Original base, EEPROM overview and bridge CSS imported. Inline EEPROM detail rows, expert bitfields, formula dialogs and native ZSC31014 calibration workspace separated from connection. Logging metadata and local archive, native output verification. Actual sensor algorithms and hardware commands are Renesas-specific; no Elmos programming sequence reused. Native temperature calibration, full logging/verification feature parity and remaining model support are not complete. Hardware validation and visual comparison still required.
+
+## v0.7.4 · Master detail parity and automatic reconnect
+Master baseline 0.7.176. Original expand control, EEPROM detail styles, grouped tables and formula dialog DOM/classes; per-result substitutions and a Renesas formula guide. Original-board automatic reconnect uses only a previously successful USB identity, matching selected SSC and a single authorized port. Explicit disconnect clears the record. DIY consent unchanged. No automatic calibration or EEPROM write. First fresh output attempted before reporting live. No physical hardware verification in CI.

@@ -11,7 +11,7 @@ jobs:
         with:
           node-version: '22'
       - run: node --test tests/*.test.mjs
-      - run: node --check app.mjs && node --check hardware-ui.mjs && node --check renesas-hardware.mjs
+      - run: node --check app.mjs && node --check hardware-ui.mjs && node --check renesas-hardware.mjs && node --check eeprom-viewer.mjs && node --check bridge-reconstruction.mjs
       - run: npm install --no-save playwright
       - run: npx playwright install --with-deps chromium
       - run: |
