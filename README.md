@@ -72,3 +72,6 @@ Removed redundant checkboxes and typed confirmation from guided ZSC31014 and exp
 
 ## v0.7.8 · Direct AFE adjustment
 Entering frontend from sensor preparation automatically activates Unity on backed-up ZSC31014. Committed gain, offset and polarity changes apply directly with serialized EEPROM changes, signature update, readback and resumed real ADC display. No separate proposal/program step for AFE. Unchanged words are skipped; inputs locked only during actual transaction, and graph history resets when the AFE configuration changes. Signature-only changes between reads are tolerated; all other stale words still abort. Final calibration still uses explicit EEPROM program action. Hardware timing not yet verified.
+
+## v0.7.9 · Reference-point ADC span
+Guided ZSC31014 point capture now displays signed live ADC difference from the captured lower point, and the fixed captured pressure span (absolute and signed difference, ADC-window percentage). Live changes do not alter saved point span. No hardware commands changed.
