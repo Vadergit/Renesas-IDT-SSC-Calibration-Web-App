@@ -7,6 +7,11 @@ export function prepareChanges31015(original,{afeGainCode,adcOffset}){
 }
 const keys=['afeGainCode','adcOffset','outputMode','updateRate','gainB','offsetB','gainT','offsetTCode','tco','tcg','tcConfig','sot','sotConfig','tsetl','clipHigh','clipLow'];
 export function restoreChanges31015(original){const d=decode31015(original);return Object.fromEntries(keys.map(k=>[k,d[k]]))}
+export function restorePlan31015(current,original){
+ const changes=restoreChanges31015(original),plan=commandPlan31015(current,changes);
+ if(!same31015(plan.expected,original))throw Error('Geschützte EEPROM-Felder stimmen nicht mit dem Original-Backup überein. Keine Schreibvorgänge.');
+ return changes;
+}
 export async function programConfig31015(driver,before,changes){
  if(driver.model!=='zsc31015'||driver.mode!=='cm')throw Error('ZSC31015 Command Mode erforderlich.');
  const plan=commandPlan31015(before,changes),actual=await driver.readVerified();
