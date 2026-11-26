@@ -49,3 +49,6 @@ import {original31014} from '../zsc31014-native.mjs';
 test('31014 restore refuses different protected configuration and accepts own backup',()=>{const w=Array(20).fill(0);w[15]=0x28;const raw=rawSetup31014(w),file={schema:1,model:'zsc31014',bytes:w.flatMap(x=>[x>>8,x&255])};assert.deepEqual(original31014(raw,file),w);assert.throws(()=>original31014(raw.map((x,i)=>i===0?1:x),file));});
 
 test('31014 write uses documented EEPROM command and verifies SSC ACK',async()=>{const sent=[],d=new I2cCB(async c=>{sent.push(c);return c==='ir_28001'?'5A':''},'zsc31014','28');d.mode='cm';await d.write31014(4,0x2000);assert.deepEqual(sent,['iw_28003442000','ir_28001']);await assert.rejects(d.write31014(2,0x6000));});
+
+import {reconstruct31014} from '../bridge-reconstruction.mjs';
+test('31014 bridge reconstruction reference linear exact roundtrip',()=>{const w=Array(20).fill(0);w[3]=0xf000;w[4]=0x4000;w[15]=0x08a8;const r=reconstruct31014(w,{low:25,high:75,vdd:5});assert.equal(r.a.adc,2048);assert.equal(r.b.adc,6144);assert.equal(r.span,4096/16384/24*1000);assert.equal(r.a.code,10240);assert.equal(r.b.code,14336);assert.equal(r.headroom,2047);w[9]=1;assert.throws(()=>reconstruct31014(w));});

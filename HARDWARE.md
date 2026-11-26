@@ -42,3 +42,6 @@ The native ZSC31014 board switches to NOM after the initial double EEPROM read. 
 
 ## v0.6.9 automatic connection
 One connection workflow after explicit supply/power-cycle consent: USB identity, chip command mode, double EEPROM read, then ZSC31014 original-board normal mode and automatic live polling. If consent is given after USB selection, chip initialization starts immediately. Failures keep the USB adapter available for diagnostics/retry. Manual output start and individual communication commands are expert-only. Other models still retain their existing model-specific command-mode read behavior; no new write commands or automatic calibration.
+
+## v0.6.10 original-board automatic start, register interpretation and bridge inverse
+Original SSC-CB connection starts the selected chip without a separate supply checkbox; selecting Connect authorizes the existing board-specific power-cycle. DIY external supply confirmation remains. ZSC31014 detailed register explanation and signed magnitude codes, reference-temperature bridge inverse with explicitly assumed digital targets, no inversion when bridge SOT active. Eq. 1–4, table 2.4 (ADC offset codes 1–15, corrected previous restriction), table 3.7. Physical bridge comparison and non-linear/temperature inversion still pending. No added EEPROM writes.
