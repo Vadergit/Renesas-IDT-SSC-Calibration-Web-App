@@ -43,3 +43,6 @@ Fixed Pro Micro FQBN, added bounded volatile RAM coefficient writes with readbac
 
 ## v0.6.2 · USB startup hotfix
 Initialize hardware logging state before selectModel() invokes clearResult()/stopLog(). Regression test clicks USB selection on all three adapters with a mocked Web Serial chooser and checks cancellation and recovery. Also install the Arduino AVR core dependency for SparkFun builds. Real board tests still pending.
+
+## v0.6.3 · Native SSC-CB version recognition
+Real V4.12k banner without ACK prefix accepted only for the original board's version command; native legacy Latin-1/Windows-1252 decoding. All other commands still require ACK/NACK; no permissive writes. Added stream-fragment and browser connection regression tests. Real sensor communication still requires testing.

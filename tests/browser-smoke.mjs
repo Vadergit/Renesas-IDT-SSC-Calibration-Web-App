@@ -15,6 +15,14 @@ for(const [i,adapter] of ['renesas','esp32','promicro'].entries()){
  assert.equal(await page.locator('#connect').isEnabled(),true);
 }
 assert.deepEqual(errors,[]);
+await page.evaluate(()=>{let ctrl;const port={readable:new ReadableStream({start(c){ctrl=c}}),writable:new WritableStream({write(b){const cmd=new TextDecoder().decode(b);const reply=cmd==='v\r'?'V4.12k© ZMD AG 2016 - CB || SVN:5124\r\n':'<ACK>\r\n';ctrl.enqueue(Uint8Array.from(reply,c=>c.charCodeAt(0)))}}),open:async()=>{},close:async()=>{}};navigator.serial.requestPort=async()=>port});
+await page.locator('#adapter').selectOption('renesas');
+await page.locator('#connect').click();
+await page.waitForFunction(()=>document.getElementById('hwVersion').textContent.includes('V4.12k'));
+assert.match(await page.locator('#conn').textContent(),/Adapter erkannt/);
+await page.locator('#disconnect').click();
+await page.waitForFunction(()=>document.getElementById('conn').textContent.includes('USB getrennt'));
+assert.deepEqual(errors,[]);
 await page.goto('http://127.0.0.1:8000/?model=zsc31010',{waitUntil:'networkidle'});
 await page.locator('#landing').waitFor({state:'visible'});
 assert.equal(await page.locator('[data-task]').count(),8);
