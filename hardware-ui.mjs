@@ -4,7 +4,7 @@ import {decode31010} from './zsc31010.mjs';
 const $=id=>document.getElementById(id);
 export function installHardware({model,mode,log,read,connectStatus,live=()=>{},connectionLost=()=>{},calibration=()=>{},calibrationStatus=()=>{}}) {
  let z14Fit=null,z14Completed=null,z14PlanKind=null;let poll=null,pollTimer=null,pollErrors=0;let trace=[],lastProbe=null,z14Original=null,z14Current=null,z14Plan=null,z14A=null,z14B=null,z14Log=[],z14Running=false,z14StopRequested=false,z14Epoch=0,z14VerifiedBackup=false;let channel=null,driver=null,i2c=null,port=null,liveLog=false,busy=false,backup=null,chip=false,adapter='',opening=false,writePlan=null,backupRequested=false;
- const state=()=>({port:!!port,busy:busy||opening||z14Running,chip,adapter,liveLog,output:!!(i2c&&model()==='zsc31014'&&i2c.mode==='nom'),raw:!!(chip&&i2cProfiles[model()]?.ram||driver?.mode==='raw')});
+ const state=()=>({port:!!port,busy:busy||opening||z14Running,chip,adapter,liveLog,unity:!!(z14Current&&isRaw31014(z14Current)),output:!!(i2c&&model()==='zsc31014'&&i2c.mode==='nom'),raw:!!(chip&&i2cProfiles[model()]?.ram||driver?.mode==='raw')});
  $('hwAfeGain').replaceChildren(...afeGains.map((g,i)=>new Option(g+' ×',i)));
  $('z14Gain').replaceChildren(...gainTable.map((g,i)=>new Option(g+' ×',i)));
  const powerAllowed=()=>adapter==='renesas'||$('hwPowerConsent').checked;
@@ -85,8 +85,9 @@ export function installHardware({model,mode,log,read,connectStatus,live=()=>{},c
  $('eepromExport').onclick=()=>{$('hwBackup').click()};
  $('hwPowerConsent').onchange=()=>{update();if(powerAllowed()&&port&&!chip&&!state().output&&!state().raw&&!busy&&!opening)run(connectChip);};
  update();function navigationState(){return {critical:busy||opening,recording:z14Running||liveLog}}
- function clearCalibrationDraft(){z14Plan=null;z14PlanKind=null;z14Fit=null;z14A=null;z14B=null;z14Completed=null;$('z14Plan').textContent='—';$('z14Points').textContent='—';update()}
+ function clearCalibrationDraft(){z14Log=[];z14Plan=null;z14PlanKind=null;z14Fit=null;z14A=null;z14B=null;z14Completed=null;$('z14Plan').textContent='—';$('z14Points').textContent='—';update()}
  function stopNativeRecording(){z14StopRequested=true}
+ function recordingDraft(){return z14Log.slice()}
  function calibrationDraft(){return {a:z14A||z14Completed?.a,b:z14B||z14Completed?.b,fit:z14Fit||z14Completed?.fit,completed:!!z14Completed}}
- return {open,disconnect,reconnect,state,update,invalidate,rawCapture,outputCapture,setLiveLog,exportOriginalBackup,applyAfe14,navigationState,clearCalibrationDraft,stopNativeRecording,calibrationDraft};
+ return {open,disconnect,reconnect,state,update,invalidate,rawCapture,outputCapture,setLiveLog,exportOriginalBackup,applyAfe14,navigationState,clearCalibrationDraft,stopNativeRecording,calibrationDraft,recordingDraft};
 }

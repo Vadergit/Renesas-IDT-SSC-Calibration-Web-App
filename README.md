@@ -81,3 +81,5 @@ Automatically calculates native coefficients upon entering the save step; normal
 
 ## v0.7.11 · Guided verification and return dialog
 Pressure-only verification planner, editable pressure sequence/cycles, step navigation, measured value and deviation graph, CSV and local archive; target scaling inherited from native calibration when entered from its final step. Home navigation asks before abandoning an active task, stops recording between serial requests and archives verification partial results. No automatic reset, NVM write or USB disconnect on leaving. Temperature verification, dedicated hysteresis analysis and PDF report are not yet implemented.
+
+Return confirmation also covers switching views. Completed native calibration is archived on entry to verification; aborted verification and test recordings retain acquired data. Unity output is not treated as calibrated pressure during verification. No extra EEPROM writes on navigation.
