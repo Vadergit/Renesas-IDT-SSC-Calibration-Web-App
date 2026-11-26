@@ -75,3 +75,6 @@ Entering frontend from sensor preparation automatically activates Unity on backe
 
 ## v0.7.9 · Reference-point ADC span
 Guided ZSC31014 point capture now displays signed live ADC difference from the captured lower point, and the fixed captured pressure span (absolute and signed difference, ADC-window percentage). Live changes do not alter saved point span. No hardware commands changed.
+
+## v0.7.10 · Simplified guided calibration
+Automatically calculates native coefficients upon entering the save step; normal view shows calculated curve, status and explicit Save calibration action. Register change table and coefficient details are expert-only. Backup/restore and automatic write verification unchanged. No automatic final EEPROM write.
