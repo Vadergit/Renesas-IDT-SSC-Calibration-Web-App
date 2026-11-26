@@ -33,7 +33,7 @@ export function installArchive({read,write,journal}){
  const note=t=>status.textContent=t;
  const records=()=>{const v=read();return Array.isArray(v)?v:[]};
  const action=f=>{try{const p=f();p?.catch?.(e=>note(e.message))}catch(e){note(e.message)}};
- const complete=async r=>({...r,...(r.journalId&&journal?{journal:await journal.read(r.journalId)}:{})});
+ const complete=async r=>{if(!r.journalId||!journal)return r;const entries=await journal.read(r.journalId);return {...r,journal:entries.length?entries:r.journal??[],journalStorageWarning:journal.failed()?'Speicherung nicht vollständig bestätigt':undefined}};
  const exportComplete=r=>action(async()=>download(fileBase(r)+'.json',json(await complete(r)),'application/json'));
  const recordKey=r=>JSON.stringify(r);
  const placeholder=()=>{current=null;detail.replaceChildren();const box=el('div',undefined,'ar-details-placeholder');box.append(el('h3','Messdatei auswählen'),el('p','Rechts erscheinen Messresultate, Gerätedaten, Messkurven, Koeffizienten und gespeicherte EEPROM-Daten.'));detail.append(box);};
@@ -53,8 +53,8 @@ export function installArchive({read,write,journal}){
   const selected=list.find(r=>recordKey(r)===previous);if(selected)open(selected);else placeholder();root.scrollTop=scroll;
  }
  for(const x of [search,type,filterStatus])x.addEventListener(x===search?'input':'change',refresh);
- $('raBackup').onclick=()=>download('Renesas-Kalibrierarchiv-'+new Date().toISOString().slice(0,10)+'.json',json({schema:'renesas-archive-v1',records:records()}),'application/json');
- $('raJournalExport').onclick=()=>action(async()=>{const entries=await journal.read();download('Renesas-Aufzeichnungsverlauf-'+new Date().toISOString().slice(0,10)+'.json',json({schema:'renesas-journal-v1',records:records(),entries}),'application/json');note(entries.length+' Journal-Einträge exportiert. Auch nicht abgeschlossene Sitzungen enthalten.');});
+ $('raBackup').onclick=()=>action(async()=>download('Renesas-Kalibrierarchiv-'+new Date().toISOString().slice(0,10)+'.json',json({schema:'renesas-archive-v1',records:await Promise.all(records().map(complete))}),'application/json'));
+ $('raJournalExport').onclick=()=>action(async()=>{const entries=await journal.read();download('Renesas-Aufzeichnungsverlauf-'+new Date().toISOString().slice(0,10)+'.json',json({schema:'renesas-journal-v1',records:records(),entries}),'application/json');note(entries.length+' Journal-Einträge exportiert. Auch nicht abgeschlossene Sitzungen enthalten.'+(journal.failed()?' Warnung: Speicherung nicht vollständig bestätigt.':''));});
  $('raImportButton').onclick=()=>$('raImport').click();
  $('raImport').onchange=async e=>{const f=e.target.files?.[0];e.target.value='';if(!f)return;try{if(f.size>20*1024*1024)throw Error('Archivdatei zu gross (max. 20 MB).');const data=JSON.parse(await f.text()),incoming=Array.isArray(data)?data:data.schema==='renesas-archive-v1'?data.records:[data],before=records(),next=mergeArchive(before,incoming);write(next);refresh();note((next.length-before.length)+' neue Protokolle importiert. Bestehende Einträge unverändert.')}catch(e){note(e.message)}};
  return {refresh};
