@@ -78,3 +78,6 @@ Guided ZSC31014 point capture now displays signed live ADC difference from the c
 
 ## v0.7.10 · Simplified guided calibration
 Automatically calculates native coefficients upon entering the save step; normal view shows calculated curve, status and explicit Save calibration action. Register change table and coefficient details are expert-only. Backup/restore and automatic write verification unchanged. No automatic final EEPROM write.
+
+## v0.7.11 · Guided verification and return dialog
+Pressure-only verification planner, editable pressure sequence/cycles, step navigation, measured value and deviation graph, CSV and local archive; target scaling inherited from native calibration when entered from its final step. Home navigation asks before abandoning an active task, stops recording between serial requests and archives verification partial results. No automatic reset, NVM write or USB disconnect on leaving. Temperature verification, dedicated hysteresis analysis and PDF report are not yet implemented.

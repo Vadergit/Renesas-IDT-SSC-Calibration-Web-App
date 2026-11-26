@@ -84,5 +84,9 @@ export function installHardware({model,mode,log,read,connectStatus,live=()=>{},c
  pollTimer=setInterval(tick,350);navigator.serial?.addEventListener('connect',()=>{void reconnect()});
  $('eepromExport').onclick=()=>{$('hwBackup').click()};
  $('hwPowerConsent').onchange=()=>{update();if(powerAllowed()&&port&&!chip&&!state().output&&!state().raw&&!busy&&!opening)run(connectChip);};
- update();return {open,disconnect,reconnect,state,update,invalidate,rawCapture,outputCapture,setLiveLog,exportOriginalBackup,applyAfe14};
+ update();function navigationState(){return {critical:busy||opening,recording:z14Running||liveLog}}
+ function clearCalibrationDraft(){z14Plan=null;z14PlanKind=null;z14Fit=null;z14A=null;z14B=null;z14Completed=null;$('z14Plan').textContent='—';$('z14Points').textContent='—';update()}
+ function stopNativeRecording(){z14StopRequested=true}
+ function calibrationDraft(){return {a:z14A||z14Completed?.a,b:z14B||z14Completed?.b,fit:z14Fit||z14Completed?.fit,completed:!!z14Completed}}
+ return {open,disconnect,reconnect,state,update,invalidate,rawCapture,outputCapture,setLiveLog,exportOriginalBackup,applyAfe14,navigationState,clearCalibrationDraft,stopNativeRecording,calibrationDraft};
 }
