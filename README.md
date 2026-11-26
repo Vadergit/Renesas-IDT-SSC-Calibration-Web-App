@@ -69,3 +69,6 @@ Removed redundant global wizard action row. The sensor preparation step exports 
 
 ## v0.7.7 · Streamlined programming
 Removed redundant checkboxes and typed confirmation from guided ZSC31014 and expert ZSC31010 EEPROM programming; the explicit program button acts as the authorization. Original backup gate, validated change plan, connected state, lock/protected-register checks, serialized writes and readback remain. Volatile RAM operations no longer require a separate download or checkbox, but require a connected SSC and initial verified read. No automatic permanent writes.
+
+## v0.7.8 · Direct AFE adjustment
+Entering frontend from sensor preparation automatically activates Unity on backed-up ZSC31014. Committed gain, offset and polarity changes apply directly with serialized EEPROM changes, signature update, readback and resumed real ADC display. No separate proposal/program step for AFE. Unchanged words are skipped; inputs locked only during actual transaction, and graph history resets when the AFE configuration changes. Signature-only changes between reads are tolerated; all other stale words still abort. Final calibration still uses explicit EEPROM program action. Hardware timing not yet verified.

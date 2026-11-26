@@ -15,7 +15,7 @@ for(const [i,adapter] of ['renesas','esp32','promicro'].entries()){
  assert.equal(await page.locator('#connect').isEnabled(),true);
 }
 assert.deepEqual(errors,[]);
-await page.evaluate(()=>{let ctrl;window.mockBridge=8192;const words='1234 0809 0D42 F000 3800 0010 0020 0000 0000 0000 F100 3000 0000 1000 5678 08A8 0498 0035 9999 4321'.split(' ');const port={readable:new ReadableStream({start(c){ctrl=c}}),writable:new WritableStream({write(b){const cmd=new TextDecoder().decode(b);if(cmd==='iw_28003800000\r')words[18]='ABCD';if(/^iw_28003(?:0[0-9A-F]|1[0-3])0000\r$/i.test(cmd))window.mockWord=parseInt(cmd.slice(8,10),16);if(/^iw_280034[0-9A-F][0-9A-F]{4}\r$/i.test(cmd))words[parseInt(cmd.slice(8,10),16)-0x40]=cmd.slice(10,14).toUpperCase();const payload=cmd==='v\r'?'V4.12k© ZMD AG 2016 - CB || SVN:5124':cmd==='ir_28001\r'?'5A':cmd==='ir_28003\r'?'5A'+words[window.mockWord]:cmd==='ir_28004\r'?window.mockBridge.toString(16).padStart(4,'0')+'6000':'';const reply='<ACK>'+payload+'\r\n';ctrl.enqueue(Uint8Array.from(reply,c=>c.charCodeAt(0)))}}),open:async()=>{},close:async()=>{}};navigator.serial.requestPort=async()=>port});
+await page.evaluate(()=>{let ctrl;window.mockBridge=8192;window.mockWrites=0;const words='1234 0809 0D42 F000 3800 0010 0020 0000 0000 0000 F100 3000 0000 1000 5678 08A8 0498 0035 9999 4321'.split(' ');const port={readable:new ReadableStream({start(c){ctrl=c}}),writable:new WritableStream({write(b){const cmd=new TextDecoder().decode(b);if(cmd==='iw_28003800000\r')words[18]='ABCD';if(/^iw_28003(?:0[0-9A-F]|1[0-3])0000\r$/i.test(cmd))window.mockWord=parseInt(cmd.slice(8,10),16);if(/^iw_280034[0-9A-F][0-9A-F]{4}\r$/i.test(cmd)){window.mockWrites++;words[parseInt(cmd.slice(8,10),16)-0x40]=cmd.slice(10,14).toUpperCase();}const payload=cmd==='v\r'?'V4.12k© ZMD AG 2016 - CB || SVN:5124':cmd==='ir_28001\r'?'5A':cmd==='ir_28003\r'?'5A'+words[window.mockWord]:cmd==='ir_28004\r'?window.mockBridge.toString(16).padStart(4,'0')+'6000':'';const reply='<ACK>'+payload+'\r\n';ctrl.enqueue(Uint8Array.from(reply,c=>c.charCodeAt(0)))}}),open:async()=>{},close:async()=>{}};navigator.serial.requestPort=async()=>port});
 await page.locator('#adapter').selectOption('renesas');
 assert.equal(await page.locator('#hwPowerConsentLabel').isVisible(),false);
 await page.locator('#connect').click();
@@ -31,8 +31,21 @@ assert.equal(await page.locator('#hwEnter').isVisible(),false);await page.locato
 await page.locator('#home').click();await page.locator('[data-task=calibration]').click();
 assert.equal(await page.locator('.z14-top-actions').count(),0);const downloadEvent=page.waitForEvent('download');await page.locator('#z14BackupAction').click();const dl=await downloadEvent;assert.match(dl.suggestedFilename(),/^ZSC31014-Original-Backup-/);await page.waitForFunction(()=>!document.getElementById('gwNext').disabled);assert.match(await page.locator('#z14BackupState').textContent(),/exportiert/);
 await page.locator('#gwNext').click();assert.match(await page.locator('#gwTitle').textContent(),/AFE/);assert.equal(await page.locator('#z14LiveGraph svg').isVisible(),true);
-await page.locator('#z14Prep').click();assert.ok(await page.locator('#z14PlanRows tr').count()>0);assert.equal(await page.locator('#z14Apply').isEnabled(),true);assert.equal(await page.locator('#z14Consent,#z14Confirm').count(),0);
-await page.locator('#z14Apply').click();await page.waitForFunction(()=>!document.getElementById('gwNext').disabled);
+await page.waitForFunction(()=>!document.getElementById('gwNext').disabled);
+assert.match(await page.locator('#z14RawState').textContent(),/Rohwertmessung aktiv/);
+assert.equal(await page.locator('#z14Prep').isVisible(),false);
+assert.equal(await page.locator('#z14Program').isVisible(),false);
+const beforeWrites=await page.evaluate(()=>window.mockWrites);
+await page.evaluate(()=>window.mockBridge=6000);
+await page.locator('#z14Gain').selectOption('4');
+await page.waitForFunction(()=>!document.getElementById('gwNext').disabled&&document.getElementById('liveRaw').textContent.replace(/\D/g,'')==='6000');
+assert.ok(await page.evaluate(()=>window.mockWrites)>beforeWrites);
+const afterGainWrites=await page.evaluate(()=>window.mockWrites);
+await page.locator('#z14Offset').fill('5');await page.locator('#z14Offset').press('Tab');
+await page.waitForFunction(()=>!document.getElementById('gwNext').disabled);
+assert.ok(await page.evaluate(()=>window.mockWrites)>afterGainWrites);
+await page.locator('#z14Pol').uncheck();await page.waitForFunction(()=>!document.getElementById('gwNext').disabled);
+assert.equal(await page.locator('#z14Program').isVisible(),false);
 await page.locator('#gwNext').click();await page.evaluate(()=>window.mockBridge=4096);await page.locator('#z14A').click();await page.waitForFunction(()=>!document.getElementById('z14B').hidden&&!document.getElementById('z14B').disabled);await page.evaluate(()=>window.mockBridge=12288);await page.locator('#z14B').click();await page.waitForFunction(()=>!document.getElementById('gwNext').disabled);assert.equal(await page.locator('#z14PointGraph circle').count(),2);
 await page.locator('#gwNext').click();await page.locator('#z14Calc').click();assert.equal(await page.locator('#z14FitGraph circle').count(),4);assert.equal(await page.locator('#z14Apply').isEnabled(),true);await page.locator('#z14Apply').click();await page.waitForFunction(()=>!document.getElementById('gwNext').disabled);await page.locator('#gwNext').click();assert.match(await page.locator('#z14FinishState').textContent(),/EEPROM programmiert/);assert.equal(await page.locator('#z14LiveGraph svg').isVisible(),true);
 await page.locator('#gwConnectionToggle').click();await page.locator('#disconnect').click();
