@@ -46,3 +46,6 @@ Initialize hardware logging state before selectModel() invokes clearResult()/sto
 
 ## v0.6.3 · Native SSC-CB version recognition
 Real V4.12k banner without ACK prefix accepted only for the original board's version command; native legacy Latin-1/Windows-1252 decoding. All other commands still require ACK/NACK; no permissive writes. Added stream-fragment and browser connection regression tests. Real sensor communication still requires testing.
+
+## v0.6.4 · SSC-CB ZSC31014 diagnostics
+Separate read-only normal-operation I2C probe, based on Renesas evaluation kit manual Fig. 7.1 (`irt28001`), visible command progress and downloadable timestamped diagnosis. USB detection is explicitly distinguished from chip CM/EEPROM read. No new EEPROM writes. Native responses except the version banner still require ACK/NACK; real sensor response pending.
