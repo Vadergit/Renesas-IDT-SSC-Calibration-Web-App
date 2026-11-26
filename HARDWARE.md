@@ -39,3 +39,6 @@ Single bridge calibration workspace and native module zsc31014-native.mjs. Origi
 
 ## v0.6.8 live header and EEPROM overview
 The native ZSC31014 board switches to NOM after the initial double EEPROM read. Header polling shares the command channel with explicit reads and stops while exclusive operations/logging are active. Output scale is code / 16384, temperature is nominal code * 200 / 2048 - 50 if non-unity temperature calibration is present; independent temperature accuracy not verified. Raw ADC values are not inferred from calibrated output. Viewer is read-only, with documented ZSC31014 fields, and export uses the same verified backup path. Other model-specific live polling and register explanations remain incomplete. Renesas SSC-CB default; demo hidden unless expert settings are enabled.
+
+## v0.6.9 automatic connection
+One connection workflow after explicit supply/power-cycle consent: USB identity, chip command mode, double EEPROM read, then ZSC31014 original-board normal mode and automatic live polling. If consent is given after USB selection, chip initialization starts immediately. Failures keep the USB adapter available for diagnostics/retry. Manual output start and individual communication commands are expert-only. Other models still retain their existing model-specific command-mode read behavior; no new write commands or automatic calibration.
