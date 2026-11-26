@@ -40,3 +40,6 @@ Original SSC-CB, ESP32-C3 and Pro Micro separately selectable; common DIY I²C p
 
 ## v0.6.1 · Laboratory test candidate
 Fixed Pro Micro FQBN, added bounded volatile RAM coefficient writes with readback, hardware ADC logging, backup comparison and cold-start EEPROM comparison. See [TEST-RELEASE.md](TEST-RELEASE.md) for scope and test checklist. Not a production calibration release.
+
+## v0.6.2 · USB startup hotfix
+Initialize hardware logging state before selectModel() invokes clearResult()/stopLog(). Regression test clicks USB selection on all three adapters with a mocked Web Serial chooser and checks cancellation and recovery. Also install the Arduino AVR core dependency for SparkFun builds. Real board tests still pending.

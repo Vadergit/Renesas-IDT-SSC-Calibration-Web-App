@@ -22,6 +22,7 @@ jobs:
       - uses: arduino/setup-arduino-cli@v2
       - run: cmp firmware/esp32c3_renesas_i2c/esp32c3_renesas_i2c.ino firmware/pro_micro_renesas/pro_micro_renesas.ino
       - run: arduino-cli core update-index --additional-urls https://raw.githubusercontent.com/sparkfun/Arduino_Boards/main/IDE_Board_Manager/package_sparkfun_index.json
+      - run: arduino-cli core install arduino:avr
       - run: arduino-cli core install SparkFun:avr --additional-urls https://raw.githubusercontent.com/sparkfun/Arduino_Boards/main/IDE_Board_Manager/package_sparkfun_index.json
       - run: arduino-cli compile --fqbn SparkFun:avr:promicro:cpu=16MHzatmega32U4 --output-dir build/pro16 firmware/pro_micro_renesas
       - run: arduino-cli compile --fqbn SparkFun:avr:promicro:cpu=8MHzatmega32U4 --output-dir build/pro8 firmware/pro_micro_renesas
