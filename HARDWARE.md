@@ -33,3 +33,6 @@ Firmware protocol 3.1 required (older v3 rejected). Both I²C model families now
 
 ## v0.6.5 ZSC31014 original board lab workflow
 Read all 20 words, named register map. Digital DF4 capture/logging, bridge-only unity preparation, selectable AFE gain/offset/polarity, native linear two-point code candidate and protected EEPROM writes. The temperature trim and device ID/lock/communication words are preserved. 25 ms wait and 5A for each write, then Start_NOM to generate signature before cold start and double full readback (signature excluded). Original bridge backup restore only. Not vendor DLL-equivalent; TK0/TKE and native higher-order math remain open. Test on spare sensor first. DIY adapters do not yet support this new programming workflow. Datasheet sections 2.2.2, 3.5–3.8 and evaluation kit manual fig 7.1.
+
+## v0.6.6 consolidated ZSC31014 laboratory flow
+Single bridge calibration workspace and native module zsc31014-native.mjs. Original-board NOM measurement and general logging use the same fresh DF4 reader. EEPROM write completion ACK checked; backup display updated after successful readback. No claim of physical qualification.
