@@ -1,5 +1,5 @@
-import {words31014,decode31014,gainTable,isRaw31014,rawSetup31014,linear31014,plan31014,program31014,original31014} from './zsc31014-native.mjs?v=0.6.7';
-import {SerialCommands,ZACwireCB,hex,parseHex,decode31014DF,decode31014EEPROM,gainOffsetPlan,writeGainOffset,i2cProfiles,decodeRawPair,averageRaw,readDouble,twoPoint31010,adapters,adapterSupported,verifyBridgeVersion,zacModels,I2cCB,ZACwireDIY,writeRamChecked,ramWord,compareBackup,labelWords,afeGainPlan,decodeAfe,afeGains,isCBVersion} from './renesas-hardware.mjs?v=0.6.7';
+import {words31014,decode31014,gainTable,isRaw31014,rawSetup31014,linear31014,plan31014,program31014,original31014} from './zsc31014-native.mjs?v=0.6.8';
+import {SerialCommands,ZACwireCB,hex,parseHex,decode31014DF,decode31014EEPROM,gainOffsetPlan,writeGainOffset,i2cProfiles,decodeRawPair,averageRaw,readDouble,twoPoint31010,adapters,adapterSupported,verifyBridgeVersion,zacModels,I2cCB,ZACwireDIY,writeRamChecked,ramWord,compareBackup,labelWords,afeGainPlan,decodeAfe,afeGains,isCBVersion} from './renesas-hardware.mjs?v=0.6.8';
 import {decode31010} from './zsc31010.mjs';
 const $=id=>document.getElementById(id);
 export function installHardware({model,mode,log,read,connectStatus,live=()=>{}}) {

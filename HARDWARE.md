@@ -36,3 +36,6 @@ Read all 20 words, named register map. Digital DF4 capture/logging, bridge-only 
 
 ## v0.6.6 consolidated ZSC31014 laboratory flow
 Single bridge calibration workspace and native module zsc31014-native.mjs. Original-board NOM measurement and general logging use the same fresh DF4 reader. EEPROM write completion ACK checked; backup display updated after successful readback. No claim of physical qualification.
+
+## v0.6.8 live header and EEPROM overview
+The native ZSC31014 board switches to NOM after the initial double EEPROM read. Header polling shares the command channel with explicit reads and stops while exclusive operations/logging are active. Output scale is code / 16384, temperature is nominal code * 200 / 2048 - 50 if non-unity temperature calibration is present; independent temperature accuracy not verified. Raw ADC values are not inferred from calibrated output. Viewer is read-only, with documented ZSC31014 fields, and export uses the same verified backup path. Other model-specific live polling and register explanations remain incomplete. Renesas SSC-CB default; demo hidden unless expert settings are enabled.
