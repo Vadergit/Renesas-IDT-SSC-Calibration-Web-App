@@ -6,10 +6,10 @@ html.guided-active #guidedWorkspace{display:block}#guidedWorkspace .gw-control>.
 /* Master uses an additional state class for its home button. Renesas keeps it accessible. */
 #home.settings-gear{display:inline-flex!important;visibility:visible!important}#hwTrace,#hwDump{max-height:240px;overflow:auto}#hwFirmware a{color:var(--blue)}
 
-.ren-ee-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin:12px 0}.ren-ee-item{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--line,#b7c9d9);border-radius:9px}.ren-ee-item strong{font-size:1.22rem}.ren-ee-item small,.ren-ee-item span{font-size:.8rem;opacity:.82}.eeprom-table td{vertical-align:top}.ren-ee-address{font-family:monospace;padding:5px 9px;min-height:0}.eeprom-table-scroll{overflow:auto;max-height:580px}.eeprom-table th{position:sticky;top:0;z-index:1}.eeprom-overview{margin:14px 0;padding:14px;border:1px solid var(--line,#b7c9d9);border-radius:12px}.eeprom-table td:nth-child(3){font-family:monospace;white-space:nowrap}[data-expert-area][hidden]{display:none!important}
+.ren-ee-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin:12px 0}.ren-ee-item{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--line,#b7c9d9);border-radius:9px}.ren-ee-item strong{font-size:1.22rem}.ren-ee-item small,.ren-ee-item span{font-size:.8rem;opacity:.82}[data-expert-area][hidden]{display:none!important}
 
-#hwPowerConsentLabel[hidden]{display:none!important}.eeprom-word-row{cursor:pointer}.eeprom-detail-row td{white-space:normal}
+#hwPowerConsentLabel[hidden]{display:none!important}.eeprom-word-row{cursor:pointer}
 
-.nvmrecon-metric{position:relative}.nvmrecon-metric>.nvmrecon-formula-trigger{position:absolute;right:6px;top:6px}.nvmrecon-metric>small{display:block;padding-right:18px}.nvmrecon-metric>span{display:block}.tl-box{border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0;background:var(--paper)}.tl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.tl-lead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.tl-note{font-size:12px;color:var(--muted)}.tl-actions{display:flex;gap:8px;flex-wrap:wrap}
+.tl-box{border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0;background:var(--paper)}.tl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.tl-lead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.tl-note{font-size:12px;color:var(--muted)}.tl-actions{display:flex;gap:8px;flex-wrap:wrap}
 
 #nativeCalOpen[hidden]{display:none!important}#z14Lab .eeprom-overview{background:var(--paper)}
