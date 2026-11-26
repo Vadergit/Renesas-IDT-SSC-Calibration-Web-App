@@ -63,3 +63,6 @@ Master baseline 0.7.176. Original expand control, EEPROM detail styles, grouped 
 
 ## v0.7.5 · Guided ZSC31014 calibration
 Six native stages with master sidebar and controls, verified backup gate, AFE live 60 s graph, two-point capture with graph and table, native coefficient preview and planned EEPROM change table, separate verification stage. The ADC graph is labelled Unity only when the current EEPROM configuration confirms unity; otherwise digital output. Native temperature calibration remains unavailable. Existing EEPROM guard, double readback and manual confirmation retained. Mocked serial regression covers the full linear workflow; not a real device test.
+
+## v0.7.6 · Guided backup navigation
+Removed redundant global wizard action row. The sensor preparation step exports the immutable original snapshot directly, not a later EEPROM read whose signature can differ. Current EEPROM viewer export stays separate. Next is still gated by original backup and unlocked EEPROM. Regression uses a changed simulated signature and verifies the original backup download and advancement.
