@@ -83,3 +83,6 @@ Automatically calculates native coefficients upon entering the save step; normal
 Pressure-only verification planner, editable pressure sequence/cycles, step navigation, measured value and deviation graph, CSV and local archive; target scaling inherited from native calibration when entered from its final step. Home navigation asks before abandoning an active task, stops recording between serial requests and archives verification partial results. No automatic reset, NVM write or USB disconnect on leaving. Temperature verification, dedicated hysteresis analysis and PDF report are not yet implemented.
 
 Return confirmation also covers switching views. Completed native calibration is archived on entry to verification; aborted verification and test recordings retain acquired data. Unity output is not treated as calibrated pressure during verification. No extra EEPROM writes on navigation.
+
+## v0.7.12 · USB startup regression fix
+Removed obsolete toVerify binding and restored offline verificationExport control in its own panel. Missing DOM nodes previously stopped app startup before Web Serial listeners were installed. Added static check for literal DOM and event bindings plus chooser and known-port checks on all three adapters; startup browser errors are now logged immediately. No firmware or SSC protocol changes.

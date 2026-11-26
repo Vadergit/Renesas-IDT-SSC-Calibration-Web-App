@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 const browser=await chromium.launch({headless:true});
 try{
 const page=await browser.newPage({viewport:{width:1440,height:900}});
-const errors=[];page.on('pageerror',e=>errors.push(e.message));
-await page.addInitScript(()=>{window.serialRequests=0;Object.defineProperty(navigator,'serial',{configurable:true,value:{requestPort:()=>{window.serialRequests++;return Promise.reject(new DOMException('Cancelled','NotFoundError'))},getPorts:async()=>[],addEventListener:()=>{}}})});
+const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error('Browser error:',e.stack||e.message)});
+await page.addInitScript(()=>{window.serialRequests=0;window.knownRequests=0;Object.defineProperty(navigator,'serial',{configurable:true,value:{requestPort:()=>{window.serialRequests++;return Promise.reject(new DOMException('Cancelled','NotFoundError'))},getPorts:async()=>{window.knownRequests++;return []},addEventListener:()=>{}}})});
 await page.goto('http://127.0.0.1:8000/?model=zsc31014',{waitUntil:'networkidle'});
+assert.deepEqual(errors,[],'Application must initialize before any USB operation');
 await page.locator('#gwConnectionToggle').click();
 for(const [i,adapter] of ['renesas','esp32','promicro'].entries()){
  await page.locator('#adapter').selectOption(adapter);
@@ -13,6 +14,12 @@ for(const [i,adapter] of ['renesas','esp32','promicro'].entries()){
  await page.waitForFunction(n=>window.serialRequests===n,i+1);
  await page.waitForFunction(()=>document.getElementById('conn').textContent.includes('abgebrochen'));
  assert.equal(await page.locator('#connect').isEnabled(),true);
+ const knownBefore=await page.evaluate(()=>window.knownRequests);
+ await page.locator('#hwKnown').click();
+ await page.waitForFunction(n=>window.knownRequests>n,knownBefore);
+ await page.waitForFunction(()=>document.getElementById('conn').textContent.includes('Genau ein freigegebener USB-Port'));
+ assert.equal(await page.locator('#hwKnown').isEnabled(),true);
+ assert.deepEqual(errors,[]);
 }
 assert.deepEqual(errors,[]);
 await page.evaluate(()=>{let ctrl;window.mockBridge=8192;window.mockWrites=0;const words='1234 0809 0D42 F000 3800 0010 0020 0000 0000 0000 F100 3000 0000 1000 5678 08A8 0498 0035 9999 4321'.split(' ');const port={readable:new ReadableStream({start(c){ctrl=c}}),writable:new WritableStream({write(b){const cmd=new TextDecoder().decode(b);if(cmd==='iw_28003800000\r')words[18]='ABCD';if(/^iw_28003(?:0[0-9A-F]|1[0-3])0000\r$/i.test(cmd))window.mockWord=parseInt(cmd.slice(8,10),16);if(/^iw_280034[0-9A-F][0-9A-F]{4}\r$/i.test(cmd)){window.mockWrites++;words[parseInt(cmd.slice(8,10),16)-0x40]=cmd.slice(10,14).toUpperCase();}const payload=cmd==='v\r'?'V4.12k© ZMD AG 2016 - CB || SVN:5124':cmd==='ir_28001\r'?'5A':cmd==='ir_28003\r'?'5A'+words[window.mockWord]:cmd==='ir_28004\r'?window.mockBridge.toString(16).padStart(4,'0')+'6000':'';const reply='<ACK>'+payload+'\r\n';ctrl.enqueue(Uint8Array.from(reply,c=>c.charCodeAt(0)))}}),open:async()=>{},close:async()=>{}};navigator.serial.requestPort=async()=>port});
