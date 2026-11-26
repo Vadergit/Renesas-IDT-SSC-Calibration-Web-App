@@ -11,3 +11,5 @@ html.guided-active #guidedWorkspace{display:block}#guidedWorkspace .gw-control>.
 #hwPowerConsentLabel[hidden]{display:none!important}.eeprom-word-row{cursor:pointer}.eeprom-detail-row td{white-space:normal}
 
 .nvmrecon-metric{position:relative}.nvmrecon-metric>.nvmrecon-formula-trigger{position:absolute;right:6px;top:6px}.nvmrecon-metric>small{display:block;padding-right:18px}.nvmrecon-metric>span{display:block}.tl-box{border:1px solid var(--line);border-radius:10px;padding:14px;margin:12px 0;background:var(--paper)}.tl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.tl-lead{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}.tl-note{font-size:12px;color:var(--muted)}.tl-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+#nativeCalOpen[hidden]{display:none!important}#z14Lab .eeprom-overview{background:var(--paper)}
