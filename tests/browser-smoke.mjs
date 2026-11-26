@@ -27,7 +27,7 @@ await page.locator('#adapter').selectOption('renesas');
 assert.equal(await page.locator('#hwPowerConsentLabel').isVisible(),false);
 await page.locator('#connect').click();
 await page.waitForFunction(()=>document.getElementById('liveDsp').textContent!=='—');
-assert.match(await page.locator('#conn').textContent(),/SSC verbunden/);
+assert.match(await page.locator('#conn').textContent(),/SSC verbunden/);assert.equal(await page.locator('#notice').isVisible(),false);
 assert.equal(await page.locator('#hwProbe').isVisible(),false);assert.equal(await page.locator('#hwNOMStart').isVisible(),false);assert.equal(await page.locator('#demo').isVisible(),false);
 assert.equal(await page.locator('#nativeCalOpen').isVisible(),true);
 assert.equal(await page.locator('#z14Gain').count(),1);
