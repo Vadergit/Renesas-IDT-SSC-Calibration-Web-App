@@ -7,3 +7,5 @@ html.guided-active #guidedWorkspace{display:block}#guidedWorkspace .gw-control>.
 #home.settings-gear{display:inline-flex!important;visibility:visible!important}#hwTrace,#hwDump{max-height:240px;overflow:auto}#hwFirmware a{color:var(--blue)}
 
 .ren-ee-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin:12px 0}.ren-ee-item{display:flex;flex-direction:column;gap:4px;padding:12px;border:1px solid var(--line,#b7c9d9);border-radius:9px}.ren-ee-item strong{font-size:1.22rem}.ren-ee-item small,.ren-ee-item span{font-size:.8rem;opacity:.82}.eeprom-table td{vertical-align:top}.ren-ee-address{font-family:monospace;padding:5px 9px;min-height:0}.eeprom-table-scroll{overflow:auto;max-height:580px}.eeprom-table th{position:sticky;top:0;z-index:1}.eeprom-overview{margin:14px 0;padding:14px;border:1px solid var(--line,#b7c9d9);border-radius:12px}.eeprom-table td:nth-child(3){font-family:monospace;white-space:nowrap}[data-expert-area][hidden]{display:none!important}
+
+#hwPowerConsentLabel[hidden]{display:none!important}.eeprom-word-row{cursor:pointer}.eeprom-detail-row td{white-space:normal}
