@@ -7,7 +7,15 @@ const errors=[];page.on('pageerror',e=>{errors.push(e.message);console.error('Br
 await page.addInitScript(()=>{window.serialRequests=0;window.knownRequests=0;Object.defineProperty(navigator,'serial',{configurable:true,value:{requestPort:()=>{window.serialRequests++;return Promise.reject(new DOMException('Cancelled','NotFoundError'))},getPorts:async()=>{window.knownRequests++;return []},addEventListener:()=>{}}})});
 await page.goto('http://127.0.0.1:8000/?model=zsc31014',{waitUntil:'networkidle'});
 assert.deepEqual(errors,[],'Application must initialize before any USB operation');
-await page.locator('#gwConnectionToggle').click();
+// ELMOS settings contract: internal click stays open, outside click dismisses
+// without consuming the clicked navigation, Escape closes and restores focus.
+const gear=page.locator('#settings'),settingsPanel=page.locator('#settingsPanel');
+await gear.click();assert.equal(await settingsPanel.isVisible(),true);assert.equal(await gear.getAttribute('aria-expanded'),'true');
+await settingsPanel.locator('h3').first().click();assert.equal(await settingsPanel.isVisible(),true);
+await page.keyboard.press('Escape');assert.equal(await settingsPanel.isVisible(),false);assert.equal(await gear.getAttribute('aria-expanded'),'false');assert.equal(await gear.evaluate(el=>document.activeElement===el),true);
+await gear.click();await page.locator('#gwTitle').click();assert.equal(await settingsPanel.isVisible(),false);
+await gear.click();await gear.click();assert.equal(await settingsPanel.isVisible(),false);
+await gear.click();await page.locator('#gwConnectionToggle').click();assert.equal(await settingsPanel.isVisible(),false);assert.equal(await page.locator('#connect').isVisible(),true);
 for(const [i,adapter] of ['renesas','esp32','promicro'].entries()){
  await page.locator('#adapter').selectOption(adapter);
  await page.locator('#connect').click();
