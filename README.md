@@ -52,3 +52,5 @@ Separate read-only normal-operation I2C probe, based on Renesas evaluation kit m
 
 ## v0.6.5 – ZSC31014 laboratory workflow on original SSC-CB
 Native EEPROM map, fresh NOM measurements, bridge unity setup, AFE mask, two-point linear bridge gain/offset calculation, explicit EEPROM plan/program/Start_NOM signature update/cold re-read, same-session original bridge restore and CSV test logging. Preserves factory temperature calibration, IDs, locks, trims. Only original board for this new workflow. Experimental; verify on hardware before use. Does not implement native higher-order/TK0/TKE or all other models. Sources: datasheet rev 1.64 tables 2.4,3.6–3.9 and evaluation kit manual Fig 7.1, section 5.
+
+Original backup can also be imported from JSON after reconnection, checked against protected configuration and IDs before a limited restore plan. Test logging stops after the in-flight transaction, not during it. Original-board 31014 writing remains an explicitly confirmed laboratory operation.

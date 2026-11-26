@@ -21,6 +21,8 @@ await page.locator('#connect').click();
 await page.waitForFunction(()=>document.getElementById('hwVersion').textContent.includes('V4.12k'));
 assert.match(await page.locator('#conn').textContent(),/Adapter erkannt/);
 assert.equal(await page.locator('#hwProbe').isEnabled(),true);
+assert.equal(await page.locator('#z14Lab').isVisible(),true);
+assert.equal(await page.locator('#z14Apply').isDisabled(),true);
 assert.equal(await page.locator('#hwTraceExport').isEnabled(),true);
 await page.locator('#disconnect').click();
 await page.waitForFunction(()=>document.getElementById('conn').textContent.includes('USB getrennt'));
