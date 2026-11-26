@@ -60,3 +60,6 @@ UI baseline: Elmos v0.7.176 (1239b7641115e037ddd9df59ff8b682ba036b35e). Original
 
 ## v0.7.4 · Master detail parity and automatic reconnect
 Master baseline 0.7.176. Original expand control, EEPROM detail styles, grouped tables and formula dialog DOM/classes; per-result substitutions and a Renesas formula guide. Original-board automatic reconnect uses only a previously successful USB identity, matching selected SSC and a single authorized port. Explicit disconnect clears the record. DIY consent unchanged. No automatic calibration or EEPROM write. First fresh output attempted before reporting live. No physical hardware verification in CI.
+
+## v0.7.5 · Guided ZSC31014 calibration
+Six native stages with master sidebar and controls, verified backup gate, AFE live 60 s graph, two-point capture with graph and table, native coefficient preview and planned EEPROM change table, separate verification stage. The ADC graph is labelled Unity only when the current EEPROM configuration confirms unity; otherwise digital output. Native temperature calibration remains unavailable. Existing EEPROM guard, double readback and manual confirmation retained. Mocked serial regression covers the full linear workflow; not a real device test.
