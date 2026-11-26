@@ -49,3 +49,6 @@ Real V4.12k banner without ACK prefix accepted only for the original board's ver
 
 ## v0.6.4 · SSC-CB ZSC31014 diagnostics
 Separate read-only normal-operation I2C probe, based on Renesas evaluation kit manual Fig. 7.1 (`irt28001`), visible command progress and downloadable timestamped diagnosis. USB detection is explicitly distinguished from chip CM/EEPROM read. No new EEPROM writes. Native responses except the version banner still require ACK/NACK; real sensor response pending.
+
+## v0.6.5 – ZSC31014 laboratory workflow on original SSC-CB
+Native EEPROM map, fresh NOM measurements, bridge unity setup, AFE mask, two-point linear bridge gain/offset calculation, explicit EEPROM plan/program/Start_NOM signature update/cold re-read, same-session original bridge restore and CSV test logging. Preserves factory temperature calibration, IDs, locks, trims. Only original board for this new workflow. Experimental; verify on hardware before use. Does not implement native higher-order/TK0/TKE or all other models. Sources: datasheet rev 1.64 tables 2.4,3.6–3.9 and evaluation kit manual Fig 7.1, section 5.
